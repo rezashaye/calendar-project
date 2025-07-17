@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { Box, CircularProgress, Typography } from "@mui/material";
+import { useEffect, useState } from "react";
 
 // Dynamically import the calendar component to avoid hydration issues
 const CalendarApp = dynamic(() => import("@/components/CalendarApp"), {
@@ -19,16 +20,25 @@ const CalendarApp = dynamic(() => import("@/components/CalendarApp"), {
     >
       <CircularProgress size={40} />
       <Typography variant="body1" color="text.secondary">
-        Loading Calendar...
+        در حال بارگذاری تقویم...
       </Typography>
     </Box>
   ),
 });
 
 export default function Home() {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   return (
-    <Box sx={{ minHeight: "100vh", backgroundColor: "background.default" }}>
-      <CalendarApp />
+    <Box
+      sx={{ minHeight: "100vh", backgroundColor: "background.default" }}
+      suppressHydrationWarning
+    >
+      {isClient && <CalendarApp />}
     </Box>
   );
 }

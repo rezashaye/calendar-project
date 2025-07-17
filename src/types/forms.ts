@@ -1,14 +1,15 @@
 import type { Reminder, EventAttendee, Person } from "../stores/calendarStore";
+import type { Moment } from "moment";
 
 // Form data types that match our Yup schemas exactly
 export interface EventFormData {
   id?: string;
   title: string;
   description?: string;
-  startDate: string;
-  endDate: string;
-  startTime: string;
-  endTime: string;
+  startDate: string | Moment;
+  endDate: string | Moment;
+  startTime: string | Moment;
+  endTime: string | Moment;
   color: string;
   isAllDay?: boolean;
   location?: string;

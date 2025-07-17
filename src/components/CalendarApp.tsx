@@ -171,7 +171,7 @@ export default function CalendarApp() {
 
   const renderCurrentView = () => {
     switch (currentView) {
-      case "Day":
+      case "روزانه":
         return (
           <DayView
             onEventClick={handleEventClick}
@@ -179,7 +179,7 @@ export default function CalendarApp() {
             onDateClick={handleDateClick}
           />
         );
-      case "Week":
+      case "هفتگی":
         return (
           <WeekView
             onEventClick={handleEventClick}
@@ -187,7 +187,7 @@ export default function CalendarApp() {
             onDateClick={handleDateClick}
           />
         );
-      case "Month":
+      case "ماهانه":
         return (
           <MonthView
             onEventClick={handleEventClick}
@@ -195,7 +195,7 @@ export default function CalendarApp() {
             onDateClick={handleDateClick}
           />
         );
-      case "Agenda":
+      case "برنامه":
         return (
           <AgendaView
             onEventClick={handleEventClick}

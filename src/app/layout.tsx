@@ -3,9 +3,8 @@ import Providers from "./providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Calendar App",
-  description:
-    "A modern calendar application built with Next.js and Material-UI",
+  title: "تقویم ",
+  description: "یک برنامه تقویم مدرن ساخته شده با Next.js و Material-UI",
 };
 
 export default function RootLayout({
@@ -14,7 +13,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" dir="ltr" suppressHydrationWarning>
+    <html lang="fa" dir="rtl" suppressHydrationWarning>
       <body suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>

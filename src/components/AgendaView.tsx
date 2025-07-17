@@ -17,6 +17,7 @@ import {
   Event as CalendarEvent,
 } from "../stores/calendarStore";
 import { useCalendarHelpers } from "../hooks/useCalendarHelpers";
+import { formatJalaliFullDate } from "../utils/jalaliHelper";
 
 interface AgendaViewProps {
   onEventClick?: (event: CalendarEvent) => void;
@@ -37,8 +38,7 @@ const AgendaView: React.FC<AgendaViewProps> = React.memo(
     const { currentDate } = useCalendarStore();
 
     // Use custom hook for calendar helpers
-    const { getEventsForDateRange, formatTime, formatDateFull, isToday } =
-      useCalendarHelpers();
+    const { getEventsForDateRange, formatTime, isToday } = useCalendarHelpers();
 
     // Use prop date if provided, otherwise use store date
     const workingDate = currentDate;
@@ -208,10 +208,10 @@ const AgendaView: React.FC<AgendaViewProps> = React.memo(
               gap: 1,
             }}
           >
-            {formatDateFull(date)}
+            {formatJalaliFullDate(date)}
             {today && (
               <Chip
-                label="Today"
+                label="امروز"
                 size="small"
                 color="primary"
                 variant="filled"
@@ -236,7 +236,7 @@ const AgendaView: React.FC<AgendaViewProps> = React.memo(
       return (
         <Box sx={{ width: 280, p: 2 }}>
           <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-            Agenda Overview
+            نمای کلی برنامه
           </Typography>
 
           {/* Stats */}
@@ -249,7 +249,7 @@ const AgendaView: React.FC<AgendaViewProps> = React.memo(
                 {upcomingCount}
               </Typography>
               <Typography variant="body2" sx={{ color: "primary.dark" }}>
-                Upcoming Events
+                رویدادهای پیش رو
               </Typography>
             </Paper>
 
@@ -261,7 +261,7 @@ const AgendaView: React.FC<AgendaViewProps> = React.memo(
                 {todayEvents.length}
               </Typography>
               <Typography variant="body2" sx={{ color: "success.dark" }}>
-                Today&apos;s Events
+                رویدادهای امروز
               </Typography>
             </Paper>
           </Box>
@@ -270,7 +270,7 @@ const AgendaView: React.FC<AgendaViewProps> = React.memo(
           {todayEvents.length > 0 && (
             <Box sx={{ mb: 3 }}>
               <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
-                Today&apos;s Schedule
+                برنامه امروز
               </Typography>
               {todayEvents.map((event) => (
                 <Box key={event.id} sx={{ mb: 1.5 }}>
@@ -288,20 +288,18 @@ const AgendaView: React.FC<AgendaViewProps> = React.memo(
           {/* Event Types */}
           <Box>
             <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
-              Event Types
+              انواع رویداد
             </Typography>
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-              {["Meeting", "Personal", "Work", "Health", "Other"].map(
-                (type) => (
-                  <Chip
-                    key={type}
-                    label={type}
-                    size="small"
-                    variant="outlined"
-                    sx={{ fontSize: "0.7rem" }}
-                  />
-                )
-              )}
+              {["جلسه", "شخصی", "کاری", "سلامتی", "سایر"].map((type) => (
+                <Chip
+                  key={type}
+                  label={type}
+                  size="small"
+                  variant="outlined"
+                  sx={{ fontSize: "0.7rem" }}
+                />
+              ))}
             </Box>
           </Box>
         </Box>
@@ -332,7 +330,7 @@ const AgendaView: React.FC<AgendaViewProps> = React.memo(
           >
             <EventNote sx={{ fontSize: 28, color: "primary.main", mr: 2 }} />
             <Typography variant="h4" sx={{ fontWeight: 600 }}>
-              Agenda View
+              نمای برنامه
             </Typography>
           </Box>
 
@@ -353,10 +351,10 @@ const AgendaView: React.FC<AgendaViewProps> = React.memo(
                   sx={{ fontSize: 64, color: "text.secondary", mb: 2 }}
                 />
                 <Typography variant="h5" sx={{ fontWeight: 600, mb: 1 }}>
-                  No Upcoming Events
+                  رویداد پیش رو وجود ندارد
                 </Typography>
                 <Typography variant="body1" color="text.secondary">
-                  Your schedule is clear for the next 30 days.
+                  برنامه شما برای ۳۰ روز آینده خالی است.
                 </Typography>
               </Box>
             ) : (

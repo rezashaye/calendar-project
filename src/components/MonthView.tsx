@@ -5,6 +5,12 @@ import { Box, Typography, Paper, IconButton, Badge } from "@mui/material";
 import { ChevronLeft, ChevronRight } from "@mui/icons-material";
 import { useCalendarStore, Event } from "../stores/calendarStore";
 import { useCalendarHelpers } from "../hooks/useCalendarHelpers";
+import {
+  jalaliWeekdaysShort,
+  formatJalaliMonthYear,
+  getJalaliMonthData,
+  getJalaliDate,
+} from "../utils/jalaliHelper";
 
 interface MonthViewProps {
   onEventClick?: (event: Event) => void;
@@ -33,41 +39,18 @@ const MonthView: React.FC<MonthViewProps> = React.memo(
 
     // Calculate month data
     const getMonthData = (date: Date) => {
-      const year = date.getFullYear();
-      const month = date.getMonth();
-
-      const firstDayOfMonth = new Date(year, month, 1);
-      const lastDayOfMonth = new Date(year, month + 1, 0);
-      const firstDayWeekday = firstDayOfMonth.getDay();
-      const daysInMonth = lastDayOfMonth.getDate();
-
-      const days = [];
-      const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-      // Add empty cells for days before the first day of the month
-      for (let i = 0; i < firstDayWeekday; i++) {
-        days.push(null);
-      }
-
-      // Add days of the month
-      for (let day = 1; day <= daysInMonth; day++) {
-        days.push(new Date(year, month, day));
-      }
-
-      return { days, weekdays };
+      return getJalaliMonthData(date);
     };
 
-    const { days, weekdays } = getMonthData(workingDate);
+    const { days } = getMonthData(workingDate);
+    const weekdays = jalaliWeekdaysShort;
 
     const navigateMonth = (direction: "prev" | "next") => {
       navigateDate(direction);
     };
 
     const formatMonthYear = (date: Date) => {
-      return date.toLocaleDateString("en-US", {
-        month: "long",
-        year: "numeric",
-      });
+      return formatJalaliMonthYear(date);
     };
 
     const handleDateClick = (date: Date, mouseEvent: React.MouseEvent) => {
@@ -110,7 +93,7 @@ const MonthView: React.FC<MonthViewProps> = React.memo(
                 fontWeight: 500,
               }}
             >
-              +{dayEvents.length - maxVisible} more
+              +{dayEvents.length - maxVisible} بیشتر
             </Typography>
           )}
         </Box>
@@ -128,20 +111,20 @@ const MonthView: React.FC<MonthViewProps> = React.memo(
               mb: 2,
             }}
           >
-            <IconButton size="small" onClick={() => navigateMonth("prev")}>
-              <ChevronLeft />
+            <IconButton size="small" onClick={() => navigateMonth("next")}>
+              <ChevronRight />
             </IconButton>
             <Typography variant="h6" sx={{ fontWeight: 600 }}>
               {formatMonthYear(workingDate)}
             </Typography>
-            <IconButton size="small" onClick={() => navigateMonth("next")}>
-              <ChevronRight />
+            <IconButton size="small" onClick={() => navigateMonth("prev")}>
+              <ChevronLeft />
             </IconButton>
           </Box>
 
           <Box sx={{ mt: 3 }}>
             <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
-              This Month
+              این ماه
             </Typography>
             <Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
               {formatMonthYear(workingDate)}
@@ -150,7 +133,7 @@ const MonthView: React.FC<MonthViewProps> = React.memo(
             {/* Recent events */}
             <Box>
               <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
-                Upcoming Events
+                رویدادهای پیش رو
               </Typography>
               {getEventsForDate(new Date())
                 .slice(0, 3)
@@ -285,7 +268,7 @@ const MonthView: React.FC<MonthViewProps> = React.memo(
                             justifyContent: "center",
                           }}
                         >
-                          {day.getDate()}
+                          {getJalaliDate(day)}
                         </Typography>
                         {getEventCountForDate(day) > 0 && (
                           <Badge

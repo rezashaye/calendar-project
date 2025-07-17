@@ -33,8 +33,6 @@ import {
   Notifications,
   LightMode,
   DarkMode,
-  FormatTextdirectionRToL,
-  FormatTextdirectionLToR,
 } from "@mui/icons-material";
 
 // Local imports
@@ -42,6 +40,7 @@ import { useTheme } from "../context/ThemeContext";
 import { useColorTheme } from "../context/ColorThemeContext";
 import { useCalendarStore, CalendarView } from "../stores/calendarStore";
 import { useCalendarHelpers } from "../hooks/useCalendarHelpers";
+import { formatJalaliMonthYear } from "../utils/jalaliHelper";
 import ColorPicker from "./ColorPicker";
 
 // ============================================================================
@@ -94,7 +93,7 @@ const Header: React.FC<HeaderProps> = ({ onAddEvent }) => {
     useCalendarHelpers();
 
   // Theme context
-  const { isDarkMode, isRTL, toggleDarkMode, toggleRTL } = useTheme();
+  const { isDarkMode, toggleDarkMode } = useTheme();
 
   // Color theme context
   const { currentColorTheme } = useColorTheme();
@@ -107,12 +106,12 @@ const Header: React.FC<HeaderProps> = ({ onAddEvent }) => {
    */
   const getEventsCount = (): number => {
     switch (currentView) {
-      case "Week":
+      case "هفتگی":
         return currentWeekEventsCount;
-      case "Month":
+      case "ماهانه":
         return currentMonthEventsCount;
       default:
-        return currentWeekEventsCount;
+        return currentMonthEventsCount;
     }
   };
 
@@ -120,10 +119,7 @@ const Header: React.FC<HeaderProps> = ({ onAddEvent }) => {
    * Format current date for display
    */
   const formatCurrentDate = (): string => {
-    return currentDate.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-    });
+    return formatJalaliMonthYear(currentDate);
   };
 
   // ============================================================================
@@ -166,10 +162,10 @@ const Header: React.FC<HeaderProps> = ({ onAddEvent }) => {
   // CONSTANTS
   // ============================================================================
   const viewOptions = [
-    { name: "Month", icon: <ViewModule /> },
-    { name: "Week", icon: <ViewWeek /> },
-    { name: "Day", icon: <ViewDay /> },
-    { name: "Agenda", icon: <ViewAgenda /> },
+    { name: "ماهانه", icon: <ViewModule /> },
+    { name: "هفتگی", icon: <ViewWeek /> },
+    { name: "روزانه", icon: <ViewDay /> },
+    { name: "برنامه", icon: <ViewAgenda /> },
   ];
 
   return (
@@ -222,7 +218,7 @@ const Header: React.FC<HeaderProps> = ({ onAddEvent }) => {
                 transition: "background 0.3s ease-in-out",
               }}
             >
-              Calendar App
+              برنامه تقویم
             </Typography>
           </Box>
 
@@ -247,24 +243,8 @@ const Header: React.FC<HeaderProps> = ({ onAddEvent }) => {
                 transition: "all 0.3s ease-in-out",
               }}
             >
-              Today
+              امروز
             </Button>
-
-            <IconButton
-              onClick={() => navigateDate("prev")}
-              sx={{
-                border: "1px solid",
-                borderColor: "divider",
-                borderRadius: 2,
-                "&:hover": {
-                  borderColor: currentColorTheme.primary,
-                  backgroundColor: `${currentColorTheme.primary}08`,
-                },
-                transition: "all 0.3s ease-in-out",
-              }}
-            >
-              <ChevronLeft />
-            </IconButton>
 
             <IconButton
               onClick={() => navigateDate("next")}
@@ -280,6 +260,22 @@ const Header: React.FC<HeaderProps> = ({ onAddEvent }) => {
               }}
             >
               <ChevronRight />
+            </IconButton>
+
+            <IconButton
+              onClick={() => navigateDate("prev")}
+              sx={{
+                border: "1px solid",
+                borderColor: "divider",
+                borderRadius: 2,
+                "&:hover": {
+                  borderColor: currentColorTheme.primary,
+                  backgroundColor: `${currentColorTheme.primary}08`,
+                },
+                transition: "all 0.3s ease-in-out",
+              }}
+            >
+              <ChevronLeft />
             </IconButton>
 
             <Typography
@@ -353,7 +349,7 @@ const Header: React.FC<HeaderProps> = ({ onAddEvent }) => {
 
           {/* Event Count Badge */}
           <Chip
-            label={`${getEventsCount()} events`}
+            label={`${getEventsCount()} رویداد`}
             size="small"
             variant="outlined"
             sx={{
@@ -385,7 +381,7 @@ const Header: React.FC<HeaderProps> = ({ onAddEvent }) => {
               transition: "all 0.3s ease-in-out",
             }}
           >
-            Add Event
+            افزودن رویداد
           </Button>
 
           <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />
@@ -402,38 +398,6 @@ const Header: React.FC<HeaderProps> = ({ onAddEvent }) => {
           >
             {isDarkMode ? <LightMode /> : <DarkMode />}
           </IconButton>
-
-          {/* RTL Toggle */}
-          <IconButton
-            onClick={toggleRTL}
-            sx={{
-              border: "1px solid",
-              borderColor: "divider",
-              borderRadius: 2,
-              backgroundColor: isRTL ? "primary.light" : "transparent",
-              color: isRTL ? "primary.contrastText" : "inherit",
-              "&:hover": {
-                backgroundColor: isRTL ? "primary.main" : "action.hover",
-              },
-            }}
-            title={isRTL ? "Switch to LTR" : "Switch to RTL"}
-          >
-            {isRTL ? <FormatTextdirectionLToR /> : <FormatTextdirectionRToL />}
-          </IconButton>
-
-          {/* RTL Status Indicator */}
-          {isRTL && (
-            <Chip
-              label="RTL"
-              size="small"
-              color="primary"
-              sx={{
-                fontSize: "0.75rem",
-                height: 24,
-                borderRadius: 1,
-              }}
-            />
-          )}
 
           {/* Notifications */}
           <IconButton
@@ -475,15 +439,15 @@ const Header: React.FC<HeaderProps> = ({ onAddEvent }) => {
           >
             <MenuItem onClick={handleProfileMenuClose} sx={{ gap: 1 }}>
               <AccountCircle />
-              Profile
+              پروفایل
             </MenuItem>
             <MenuItem onClick={handleProfileMenuClose} sx={{ gap: 1 }}>
               <Settings />
-              Settings
+              تنظیمات
             </MenuItem>
             <Divider />
             <MenuItem onClick={handleProfileMenuClose} sx={{ gap: 1 }}>
-              Logout
+              خروج
             </MenuItem>
           </Menu>
 

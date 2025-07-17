@@ -8,13 +8,6 @@ import { prefixer } from "stylis";
 import rtlPlugin from "stylis-plugin-rtl";
 import { CacheProvider } from "@emotion/react";
 import createCache from "@emotion/cache";
-import { Roboto } from "next/font/google";
-
-const roboto = Roboto({
-  weight: ["300", "400", "500", "700"],
-  subsets: ["latin"],
-  display: "swap",
-});
 
 // Create RTL cache
 const cacheRtl = createCache({
@@ -71,7 +64,7 @@ const createAppTheme = (isDarkMode: boolean, isRTL: boolean): Theme => {
       },
     },
     typography: {
-      fontFamily: roboto.style.fontFamily,
+      fontFamily: '"Vazir", "Tahoma", "Arial", sans-serif',
       h1: { fontWeight: 600 },
       h2: { fontWeight: 600 },
       h3: { fontWeight: 600 },
@@ -138,7 +131,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [isRTL, setIsRTL] = useState(false);
+  const [isRTL, setIsRTL] = useState(true); // RTL پیش‌فرض
   const [isHydrated, setIsHydrated] = useState(false);
 
   // Load theme and RTL preferences from localStorage on mount (client-side only)
@@ -155,6 +148,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
       }
       if (savedRTL !== null) {
         setIsRTL(JSON.parse(savedRTL));
+      } else {
+        setIsRTL(true); // RTL پیش‌فرض
       }
     }
   }, []);
@@ -177,7 +172,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     if (isHydrated && typeof document !== "undefined") {
       document.documentElement.dir = isRTL ? "rtl" : "ltr";
-      document.documentElement.lang = isRTL ? "ar" : "en";
+      document.documentElement.lang = isRTL ? "fa" : "en";
     }
   }, [isRTL, isHydrated]);
 
@@ -194,13 +189,13 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Prevent flash of unstyled content during hydration
   if (!isHydrated) {
-    // Use light theme and LTR during SSR and initial hydration
-    const ssrTheme = createAppTheme(false, false);
+    // استفاده از RTL در SSR و hydration اولیه
+    const ssrTheme = createAppTheme(false, true);
     return (
       <ThemeContext.Provider
-        value={{ isDarkMode: false, isRTL: false, toggleDarkMode, toggleRTL }}
+        value={{ isDarkMode: false, isRTL: true, toggleDarkMode, toggleRTL }}
       >
-        <CacheProvider value={cacheLtr}>
+        <CacheProvider value={cacheRtl}>
           <MuiThemeProvider theme={ssrTheme}>
             <CssBaseline />
             {children}

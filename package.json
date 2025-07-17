@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@date-io/moment": "^3.2.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@fontsource/roboto": "^5.2.6",
@@ -19,9 +20,11 @@
     "@mui/styled-engine-sc": "^7.2.0",
     "@mui/x-date-pickers": "^8.8.0",
     "@mui/x-date-pickers-pro": "^8.8.0",
+    "@types/moment-jalaali": "^0.7.9",
     "@types/uuid": "^10.0.0",
     "@types/yup": "^0.29.14",
     "date-fns": "^4.1.0",
+    "moment-jalaali": "^0.10.4",
     "next": "15.3.5",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

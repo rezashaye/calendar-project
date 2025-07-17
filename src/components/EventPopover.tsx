@@ -29,7 +29,57 @@ import {
   PersonAdd as PersonAddIcon,
 } from "@mui/icons-material";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
+import moment from "moment-jalaali";
+
+// Configure moment-jalaali for Persian calendar
+moment.loadPersian({
+  usePersianDigits: true,
+  dialect: "persian-modern",
+});
+
+// Set the locale to Persian with complete configuration
+moment.locale("fa", {
+  jMonths: [
+    "فروردین",
+    "اردیبهشت",
+    "خرداد",
+    "تیر",
+    "مرداد",
+    "شهریور",
+    "مهر",
+    "آبان",
+    "آذر",
+    "دی",
+    "بهمن",
+    "اسفند",
+  ],
+  jMonthsShort: [
+    "فرو",
+    "ارد",
+    "خرد",
+    "تیر",
+    "مرد",
+    "شهر",
+    "مهر",
+    "آبا",
+    "آذر",
+    "دی",
+    "بهم",
+    "اسف",
+  ],
+  weekdays: [
+    "یکشنبه",
+    "دوشنبه",
+    "سه‌شنبه",
+    "چهارشنبه",
+    "پنج‌شنبه",
+    "جمعه",
+    "شنبه",
+  ],
+  weekdaysShort: ["یک", "دو", "سه", "چهار", "پنج", "جمعه", "شنبه"],
+  weekdaysMin: ["ی", "د", "س", "چ", "پ", "ج", "ش"],
+});
 import {
   Event,
   Reminder,
@@ -67,26 +117,26 @@ interface EventPopoverProps {
 }
 
 const eventColors = [
-  { name: "Blue", value: "#2196f3" },
-  { name: "Green", value: "#4caf50" },
-  { name: "Red", value: "#f44336" },
-  { name: "Purple", value: "#9c27b0" },
-  { name: "Orange", value: "#ff9800" },
-  { name: "Teal", value: "#009688" },
-  { name: "Pink", value: "#e91e63" },
-  { name: "Indigo", value: "#3f51b5" },
+  { name: "آبی", value: "#2196f3" },
+  { name: "سبز", value: "#4caf50" },
+  { name: "قرمز", value: "#f44336" },
+  { name: "بنفش", value: "#9c27b0" },
+  { name: "نارنجی", value: "#ff9800" },
+  { name: "سبز دریایی", value: "#009688" },
+  { name: "صورتی", value: "#e91e63" },
+  { name: "نیلی", value: "#3f51b5" },
 ];
 
 const reminderTimeOptions = [
-  { value: 0, label: "At event time" },
-  { value: 5, label: "5 minutes before" },
-  { value: 10, label: "10 minutes before" },
-  { value: 15, label: "15 minutes before" },
-  { value: 30, label: "30 minutes before" },
-  { value: 60, label: "1 hour before" },
-  { value: 120, label: "2 hours before" },
-  { value: 1440, label: "1 day before" },
-  { value: 10080, label: "1 week before" },
+  { value: 0, label: "هنگام شروع رویداد" },
+  { value: 5, label: "۵ دقیقه قبل" },
+  { value: 10, label: "۱۰ دقیقه قبل" },
+  { value: 15, label: "۱۵ دقیقه قبل" },
+  { value: 30, label: "۳۰ دقیقه قبل" },
+  { value: 60, label: "۱ ساعت قبل" },
+  { value: 120, label: "۲ ساعت قبل" },
+  { value: 1440, label: "۱ روز قبل" },
+  { value: 10080, label: "۱ هفته قبل" },
 ];
 
 const EventPopover: React.FC<EventPopoverProps> = ({
@@ -123,20 +173,28 @@ const EventPopover: React.FC<EventPopoverProps> = ({
         ...event,
         // Ensure isAllDay is always a boolean
         isAllDay: event.isAllDay ?? false,
+        // Convert dates to moment objects
+        startDate: event.startDate ? moment(event.startDate) : moment(),
+        endDate: event.endDate ? moment(event.endDate) : moment(),
+        startTime: event.startTime
+          ? moment(event.startTime, "HH:mm")
+          : moment("09:00", "HH:mm"),
+        endTime: event.endTime
+          ? moment(event.endTime, "HH:mm")
+          : moment("10:00", "HH:mm"),
       };
     }
 
-    const date = defaultDate || new Date();
-    const dateStr = date.toISOString().split("T")[0];
+    const date = defaultDate ? moment(defaultDate) : moment();
 
     return {
       id: generateEventId(),
       title: "",
       description: "",
-      startDate: dateStr,
-      endDate: dateStr,
-      startTime: "09:00",
-      endTime: "10:00",
+      startDate: date,
+      endDate: date,
+      startTime: moment("09:00", "HH:mm"),
+      endTime: moment("10:00", "HH:mm"),
       color: "#2196f3",
       isAllDay: false,
       location: "",
@@ -185,19 +243,26 @@ const EventPopover: React.FC<EventPopoverProps> = ({
       form.reset({
         ...event,
         isAllDay: event.isAllDay ?? false,
+        startDate: event.startDate ? moment(event.startDate) : moment(),
+        endDate: event.endDate ? moment(event.endDate) : moment(),
+        startTime: event.startTime
+          ? moment(event.startTime, "HH:mm")
+          : moment("09:00", "HH:mm"),
+        endTime: event.endTime
+          ? moment(event.endTime, "HH:mm")
+          : moment("10:00", "HH:mm"),
       });
     } else {
-      const date = defaultDate || new Date();
-      const dateStr = date.toISOString().split("T")[0];
+      const date = defaultDate ? moment(defaultDate) : moment();
 
       form.reset({
         id: generateEventId(),
         title: "",
         description: "",
-        startDate: dateStr,
-        endDate: dateStr,
-        startTime: "09:00",
-        endTime: "10:00",
+        startDate: date,
+        endDate: date,
+        startTime: moment("09:00", "HH:mm"),
+        endTime: moment("10:00", "HH:mm"),
         color: "#2196f3",
         isAllDay: false,
         location: "",
@@ -289,6 +354,13 @@ const EventPopover: React.FC<EventPopoverProps> = ({
     const eventToSave: Event = {
       ...data,
       id: data.id || generateEventId(),
+      // Convert moment objects back to strings
+      startDate: data.startDate
+        ? moment(data.startDate).format("YYYY-MM-DD")
+        : "",
+      endDate: data.endDate ? moment(data.endDate).format("YYYY-MM-DD") : "",
+      startTime: data.startTime ? moment(data.startTime).format("HH:mm") : "",
+      endTime: data.endTime ? moment(data.endTime).format("HH:mm") : "",
       updatedAt: new Date().toISOString(),
       createdAt: data.createdAt || new Date().toISOString(),
       createdBy: data.createdBy || "current-user",
@@ -306,7 +378,7 @@ const EventPopover: React.FC<EventPopoverProps> = ({
   };
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns}>
+    <LocalizationProvider dateAdapter={AdapterMoment} adapterLocale="fa">
       <Popover
         open={open}
         anchorEl={anchorEl}
@@ -336,7 +408,7 @@ const EventPopover: React.FC<EventPopoverProps> = ({
             <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
               <EventIcon sx={{ mr: 1, color: "primary.main" }} />
               <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 600 }}>
-                {mode === "create" ? "Create Event" : "Edit Event"}
+                {mode === "create" ? "ایجاد رویداد" : "ویرایش رویداد"}
               </Typography>
               <IconButton
                 onClick={onClose}
@@ -354,7 +426,7 @@ const EventPopover: React.FC<EventPopoverProps> = ({
                 <ControlledTextField
                   control={control}
                   name="title"
-                  label="Event Title"
+                  label="عنوان رویداد"
                   autoFocus
                   required
                 />
@@ -363,25 +435,25 @@ const EventPopover: React.FC<EventPopoverProps> = ({
                 <ControlledTextField
                   control={control}
                   name="description"
-                  label="Description"
+                  label="توضیحات"
                   multiline
                   rows={2}
-                  placeholder="Add event description"
+                  placeholder="توضیحات رویداد را اضافه کنید"
                 />
 
                 {/* Location */}
                 <ControlledTextField
                   control={control}
                   name="location"
-                  label="Location"
-                  placeholder="Add event location"
+                  label="محل برگزاری"
+                  placeholder="محل برگزاری رویداد را اضافه کنید"
                 />
 
                 {/* All Day Toggle */}
                 <ControlledSwitch
                   control={control}
                   name="isAllDay"
-                  label="All Day Event"
+                  label="تمام روز"
                 />
 
                 {/* Date Selection */}
@@ -389,12 +461,12 @@ const EventPopover: React.FC<EventPopoverProps> = ({
                   <ControlledDatePicker
                     control={control}
                     name="startDate"
-                    label="Start Date"
+                    label="تاریخ شروع"
                   />
                   <ControlledDatePicker
                     control={control}
                     name="endDate"
-                    label="End Date"
+                    label="تاریخ پایان"
                   />
                 </Box>
 
@@ -404,12 +476,12 @@ const EventPopover: React.FC<EventPopoverProps> = ({
                     <ControlledTimePicker
                       control={control}
                       name="startTime"
-                      label="Start Time"
+                      label="زمان شروع"
                     />
                     <ControlledTimePicker
                       control={control}
                       name="endTime"
-                      label="End Time"
+                      label="زمان پایان"
                     />
                   </Box>
                 )}
@@ -421,7 +493,7 @@ const EventPopover: React.FC<EventPopoverProps> = ({
                     sx={{ mb: 1, display: "flex", alignItems: "center" }}
                   >
                     <ColorLensIcon sx={{ mr: 1, fontSize: 16 }} />
-                    Color
+                    رنگ
                   </Typography>
                   <ControlledColorPicker
                     control={control}
@@ -437,7 +509,7 @@ const EventPopover: React.FC<EventPopoverProps> = ({
                     sx={{ mb: 1, display: "flex", alignItems: "center" }}
                   >
                     <NotificationsIcon sx={{ mr: 1, fontSize: 16 }} />
-                    Reminders
+                    یادآوری‌ها
                   </Typography>
 
                   <ReminderList
@@ -461,7 +533,7 @@ const EventPopover: React.FC<EventPopoverProps> = ({
                     }}
                   >
                     <FormControl size="small" sx={{ minWidth: 120 }}>
-                      <InputLabel>Time</InputLabel>
+                      <InputLabel>زمان</InputLabel>
                       <Select
                         value={newReminder.timeBeforeEvent}
                         onChange={(e) =>
@@ -470,7 +542,7 @@ const EventPopover: React.FC<EventPopoverProps> = ({
                             timeBeforeEvent: Number(e.target.value),
                           }))
                         }
-                        label="Time"
+                        label="زمان"
                       >
                         {reminderTimeOptions.map((option) => (
                           <MenuItem key={option.value} value={option.value}>
@@ -481,7 +553,7 @@ const EventPopover: React.FC<EventPopoverProps> = ({
                     </FormControl>
 
                     <FormControl size="small" sx={{ minWidth: 100 }}>
-                      <InputLabel>Type</InputLabel>
+                      <InputLabel>نوع</InputLabel>
                       <Select
                         value={newReminder.type}
                         onChange={(e) =>
@@ -493,11 +565,11 @@ const EventPopover: React.FC<EventPopoverProps> = ({
                               | "sms",
                           }))
                         }
-                        label="Type"
+                        label="نوع"
                       >
-                        <MenuItem value="notification">Notification</MenuItem>
-                        <MenuItem value="email">Email</MenuItem>
-                        <MenuItem value="sms">SMS</MenuItem>
+                        <MenuItem value="notification">اعلان</MenuItem>
+                        <MenuItem value="email">ایمیل</MenuItem>
+                        <MenuItem value="sms">پیامک</MenuItem>
                       </Select>
                     </FormControl>
 
@@ -507,7 +579,7 @@ const EventPopover: React.FC<EventPopoverProps> = ({
                       onClick={addReminder}
                       startIcon={<AddIcon />}
                     >
-                      Add
+                      افزودن
                     </Button>
                   </Box>
                 </Box>
@@ -519,7 +591,7 @@ const EventPopover: React.FC<EventPopoverProps> = ({
                     sx={{ mb: 1, display: "flex", alignItems: "center" }}
                   >
                     <PeopleIcon sx={{ mr: 1, fontSize: 16 }} />
-                    Share with People
+                    اشتراک‌گذاری با افراد
                   </Typography>
 
                   <AttendeeList
@@ -545,7 +617,7 @@ const EventPopover: React.FC<EventPopoverProps> = ({
                       }}
                     >
                       <FormControl size="small" sx={{ minWidth: 160 }}>
-                        <InputLabel>Select Person</InputLabel>
+                        <InputLabel>انتخاب شخص</InputLabel>
                         <Select
                           value={selectedPerson?.id || ""}
                           onChange={(e) => {
@@ -554,7 +626,7 @@ const EventPopover: React.FC<EventPopoverProps> = ({
                             );
                             setSelectedPerson(person || null);
                           }}
-                          label="Select Person"
+                          label="انتخاب شخص"
                         >
                           {availablePeople.map((person) => (
                             <MenuItem key={person.id} value={person.id}>
@@ -582,7 +654,7 @@ const EventPopover: React.FC<EventPopoverProps> = ({
                       </FormControl>
 
                       <FormControl size="small" sx={{ minWidth: 80 }}>
-                        <InputLabel>Role</InputLabel>
+                        <InputLabel>نقش</InputLabel>
                         <Select
                           value={attendeeRole}
                           onChange={(e) =>
@@ -590,17 +662,17 @@ const EventPopover: React.FC<EventPopoverProps> = ({
                               e.target.value as EventAttendee["role"]
                             )
                           }
-                          label="Role"
+                          label="نقش"
                         >
-                          <MenuItem value="organizer">Organizer</MenuItem>
-                          <MenuItem value="required">Required</MenuItem>
-                          <MenuItem value="optional">Optional</MenuItem>
-                          <MenuItem value="informational">Info</MenuItem>
+                          <MenuItem value="organizer">برگزارکننده</MenuItem>
+                          <MenuItem value="required">اجباری</MenuItem>
+                          <MenuItem value="optional">اختیاری</MenuItem>
+                          <MenuItem value="informational">اطلاعی</MenuItem>
                         </Select>
                       </FormControl>
 
                       <FormControl size="small" sx={{ minWidth: 60 }}>
-                        <InputLabel>Access</InputLabel>
+                        <InputLabel>دسترسی</InputLabel>
                         <Select
                           value={attendeePermissions}
                           onChange={(e) =>
@@ -608,11 +680,11 @@ const EventPopover: React.FC<EventPopoverProps> = ({
                               e.target.value as EventAttendee["permissions"]
                             )
                           }
-                          label="Access"
+                          label="دسترسی"
                         >
-                          <MenuItem value="view">View</MenuItem>
-                          <MenuItem value="edit">Edit</MenuItem>
-                          <MenuItem value="full">Full</MenuItem>
+                          <MenuItem value="view">مشاهده</MenuItem>
+                          <MenuItem value="edit">ویرایش</MenuItem>
+                          <MenuItem value="full">کامل</MenuItem>
                         </Select>
                       </FormControl>
 
@@ -623,7 +695,7 @@ const EventPopover: React.FC<EventPopoverProps> = ({
                         startIcon={<PersonAddIcon />}
                         disabled={!selectedPerson}
                       >
-                        Add
+                        افزودن
                       </Button>
                     </Box>
                   )}
@@ -644,12 +716,12 @@ const EventPopover: React.FC<EventPopoverProps> = ({
                       startIcon={<DeleteIcon />}
                       onClick={handleDelete}
                     >
-                      Delete
+                      حذف
                     </Button>
                   )}
                   <Box sx={{ display: "flex", gap: 1, ml: "auto" }}>
                     <Button variant="outlined" onClick={onClose}>
-                      Cancel
+                      انصراف
                     </Button>
                     <Button
                       type="submit"
@@ -657,7 +729,7 @@ const EventPopover: React.FC<EventPopoverProps> = ({
                       startIcon={<SaveIcon />}
                       disabled={isSubmitting}
                     >
-                      {mode === "create" ? "Create" : "Save"}
+                      {mode === "create" ? "ایجاد" : "ذخیره"}
                     </Button>
                   </Box>
                 </Box>

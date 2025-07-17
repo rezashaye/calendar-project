@@ -9,78 +9,128 @@ import {
   generateAttendeeId,
 } from "../utils/idGenerator";
 
+// تنظیم پیام‌های خطای فارسی برای Yup
+yup.setLocale({
+  mixed: {
+    required: "این فیلد الزامی است",
+    notType: "نوع داده نامعتبر است",
+    oneOf: "مقدار وارد شده معتبر نیست",
+  },
+  string: {
+    min: "حداقل ${min} کاراکتر وارد کنید",
+    max: "حداکثر ${max} کاراکتر مجاز است",
+    email: "آدرس ایمیل نامعتبر است",
+    matches: "فرمت وارد شده صحیح نیست",
+  },
+  number: {
+    min: "حداقل مقدار ${min} است",
+    max: "حداکثر مقدار ${max} است",
+  },
+  array: {
+    min: "حداقل ${min} آیتم وارد کنید",
+    max: "حداکثر ${max} آیتم مجاز است",
+  },
+});
+
 // Yup Schemas for validation
 export const PersonSchema = yup.object({
-  id: yup.string().required(),
-  name: yup.string().min(1, "Name is required").required(),
-  email: yup.string().email("Invalid email address").required(),
-  type: yup.string().oneOf(["member", "guest"]).required(),
+  id: yup.string().required("شناسه الزامی است"),
+  name: yup.string().min(1, "نام الزامی است").required("نام الزامی است"),
+  email: yup
+    .string()
+    .email("آدرس ایمیل نامعتبر است")
+    .required("ایمیل الزامی است"),
+  type: yup
+    .string()
+    .oneOf(["member", "guest"], "نوع کاربر نامعتبر است")
+    .required("نوع کاربر الزامی است"),
   avatar: yup.string().optional(),
   department: yup.string().optional(),
 });
 
 export const AttendeeSchema = yup.object({
-  id: yup.string().required(),
-  personId: yup.string().required(),
-  person: PersonSchema.required(),
+  id: yup.string().required("شناسه الزامی است"),
+  personId: yup.string().required("شناسه شخص الزامی است"),
+  person: PersonSchema.required("اطلاعات شخص الزامی است"),
   role: yup
     .string()
-    .oneOf(["organizer", "required", "optional", "informational"])
-    .required(),
+    .oneOf(
+      ["organizer", "required", "optional", "informational"],
+      "نقش نامعتبر است"
+    )
+    .required("نقش الزامی است"),
   status: yup
     .string()
-    .oneOf(["pending", "accepted", "declined", "tentative"])
-    .required(),
-  permissions: yup.string().oneOf(["view", "edit", "full"]).required(),
-  invitedAt: yup.string().required(),
+    .oneOf(
+      ["pending", "accepted", "declined", "tentative"],
+      "وضعیت نامعتبر است"
+    )
+    .required("وضعیت الزامی است"),
+  permissions: yup
+    .string()
+    .oneOf(["view", "edit", "full"], "سطح دسترسی نامعتبر است")
+    .required("سطح دسترسی الزامی است"),
+  invitedAt: yup.string().required("تاریخ دعوت الزامی است"),
   respondedAt: yup.string().optional(),
 });
 
 export const ReminderSchema = yup.object({
-  id: yup.string().required(),
-  type: yup.string().oneOf(["email", "notification", "sms"]).required(),
-  timeBeforeEvent: yup.number().min(0).required(),
-  isEnabled: yup.boolean().required(),
+  id: yup.string().required("شناسه الزامی است"),
+  type: yup
+    .string()
+    .oneOf(["email", "notification", "sms"], "نوع یادآوری نامعتبر است")
+    .required("نوع یادآوری الزامی است"),
+  timeBeforeEvent: yup
+    .number()
+    .min(0, "زمان یادآوری نمی‌تواند منفی باشد")
+    .required("زمان یادآوری الزامی است"),
+  isEnabled: yup.boolean().required("وضعیت فعالسازی الزامی است"),
 });
 
 export const CommentSchema = yup.object({
-  id: yup.string().required(),
-  authorId: yup.string().required(),
-  authorName: yup.string().required(),
-  content: yup.string().min(1, "Comment cannot be empty").required(),
-  createdAt: yup.string().required(),
+  id: yup.string().required("شناسه الزامی است"),
+  authorId: yup.string().required("شناسه نویسنده الزامی است"),
+  authorName: yup.string().required("نام نویسنده الزامی است"),
+  content: yup
+    .string()
+    .min(1, "نظر نمی‌تواند خالی باشد")
+    .required("محتوای نظر الزامی است"),
+  createdAt: yup.string().required("تاریخ ایجاد الزامی است"),
   updatedAt: yup.string().optional(),
 });
 
 export const EventSchema = yup.object({
-  id: yup.string().required(),
-  title: yup.string().min(1, "Event title is required").required(),
+  id: yup.string().required("شناسه الزامی است"),
+  title: yup
+    .string()
+    .min(1, "عنوان رویداد الزامی است")
+    .required("عنوان رویداد الزامی است"),
   description: yup.string().optional(),
   startDate: yup
     .string()
-    .matches(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format")
-    .required(),
+    .matches(/^\d{4}-\d{2}-\d{2}$/, "فرمت تاریخ شروع صحیح نیست")
+    .required("تاریخ شروع الزامی است"),
   endDate: yup
     .string()
-    .matches(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format")
-    .required(),
+    .matches(/^\d{4}-\d{2}-\d{2}$/, "فرمت تاریخ پایان صحیح نیست")
+    .required("تاریخ پایان الزامی است"),
   startTime: yup
     .string()
-    .matches(/^\d{2}:\d{2}$/, "Invalid time format")
-    .required(),
+    .matches(/^\d{2}:\d{2}$/, "فرمت زمان شروع صحیح نیست")
+    .required("زمان شروع الزامی است"),
   endTime: yup
     .string()
-    .matches(/^\d{2}:\d{2}$/, "Invalid time format")
-    .required(),
-  color: yup.string().required(),
+    .matches(/^\d{2}:\d{2}$/, "فرمت زمان پایان صحیح نیست")
+    .required("زمان پایان الزامی است"),
+  color: yup.string().required("رنگ الزامی است"),
   isAllDay: yup.boolean().optional(),
   location: yup.string().optional(),
   reminders: yup.array(ReminderSchema).default([]),
   attendees: yup.array(AttendeeSchema).default([]),
   comments: yup.array(CommentSchema).default([]),
-  createdAt: yup.string().required(),
+  createdAt: yup.string().required("تاریخ ایجاد الزامی است"),
   updatedAt: yup.string().optional(),
-  createdBy: yup.string().required(),
+  createdBy: yup.string().required("ایجادکننده الزامی است"),
   isRecurring: yup.boolean().optional(),
   recurrencePattern: yup.string().optional(),
   // Legacy support
@@ -91,25 +141,28 @@ export const EventSchema = yup.object({
 // Event schema for forms (id and timestamps are optional)
 export const EventFormSchema = yup.object({
   id: yup.string().optional(),
-  title: yup.string().min(1, "Event title is required").required(),
+  title: yup
+    .string()
+    .min(1, "عنوان رویداد الزامی است")
+    .required("عنوان رویداد الزامی است"),
   description: yup.string().optional(),
   startDate: yup
     .string()
-    .matches(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format")
-    .required(),
+    .matches(/^\d{4}-\d{2}-\d{2}$/, "فرمت تاریخ شروع صحیح نیست")
+    .required("تاریخ شروع الزامی است"),
   endDate: yup
     .string()
-    .matches(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format")
-    .required(),
+    .matches(/^\d{4}-\d{2}-\d{2}$/, "فرمت تاریخ پایان صحیح نیست")
+    .required("تاریخ پایان الزامی است"),
   startTime: yup
     .string()
-    .matches(/^\d{2}:\d{2}$/, "Invalid time format")
-    .required(),
+    .matches(/^\d{2}:\d{2}$/, "فرمت زمان شروع صحیح نیست")
+    .required("زمان شروع الزامی است"),
   endTime: yup
     .string()
-    .matches(/^\d{2}:\d{2}$/, "Invalid time format")
-    .required(),
-  color: yup.string().required(),
+    .matches(/^\d{2}:\d{2}$/, "فرمت زمان پایان صحیح نیست")
+    .required("زمان پایان الزامی است"),
+  color: yup.string().required("رنگ الزامی است"),
   isAllDay: yup.boolean().optional(),
   location: yup.string().optional(),
   reminders: yup.array(ReminderSchema).default([]),
@@ -138,7 +191,7 @@ export interface LegacyAttendee {
   isOrganizer?: boolean;
 }
 
-export type CalendarView = "Month" | "Week" | "Day" | "Agenda";
+export type CalendarView = "ماهانه" | "هفتگی" | "روزانه" | "برنامه";
 
 interface CalendarState {
   // View state
@@ -205,7 +258,7 @@ export const useCalendarStore = create<CalendarState>()(
     persist(
       (set, get) => ({
         // Initial state - Use fixed date to prevent hydration mismatch
-        currentView: "Week",
+        currentView: "هفتگی",
         currentDate: new Date("2025-07-13"), // Fixed date for SSR consistency
         selectedDate: new Date("2025-07-13"), // Fixed date for SSR consistency
         events: [],
@@ -228,21 +281,21 @@ export const useCalendarStore = create<CalendarState>()(
           const newDate = new Date(currentDate);
 
           switch (currentView) {
-            case "Month":
+            case "ماهانه":
               if (direction === "prev") {
                 newDate.setMonth(newDate.getMonth() - 1);
               } else {
                 newDate.setMonth(newDate.getMonth() + 1);
               }
               break;
-            case "Week":
+            case "هفتگی":
               if (direction === "prev") {
                 newDate.setDate(newDate.getDate() - 7);
               } else {
                 newDate.setDate(newDate.getDate() + 7);
               }
               break;
-            case "Day":
+            case "روزانه":
               if (direction === "prev") {
                 newDate.setDate(newDate.getDate() - 1);
               } else {

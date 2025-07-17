@@ -174,10 +174,10 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
             }}
           >
             <Palette sx={{ color: currentColorTheme.primary }} />
-            Choose Your Theme Color
+            رنگ تم خود را انتخاب کنید
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            Customize your header appearance
+            ظاهر تم رنگی خود را انتخاب کنید تا تجربه کاربری شما شخصی‌سازی شود.
           </Typography>
         </Box>
 
@@ -218,11 +218,11 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
               mb: 0.5,
             }}
           >
-            Current Theme: {currentColorTheme.name}
+            تم فعلی: {currentColorTheme.name}
           </Typography>
           <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
             <Typography variant="caption" color="text.secondary">
-              Colors:
+              رنگ‌ها:
             </Typography>
             <Box
               sx={{

@@ -17,6 +17,56 @@ import { Controller, Control, FieldPath, FieldValues } from "react-hook-form";
 import { Delete as DeleteIcon } from "@mui/icons-material";
 import type { EventFormData } from "../types/forms";
 import type { Reminder, EventAttendee } from "../stores/calendarStore";
+import moment from "moment-jalaali";
+
+// Configure moment-jalaali for Persian calendar
+moment.loadPersian({
+  dialect: "persian-modern",
+  usePersianDigits: true,
+});
+
+// Set the locale to Persian with complete configuration
+moment.locale("fa", {
+  jMonths: [
+    "فروردین",
+    "اردیبهشت",
+    "خرداد",
+    "تیر",
+    "مرداد",
+    "شهریور",
+    "مهر",
+    "آبان",
+    "آذر",
+    "دی",
+    "بهمن",
+    "اسفند",
+  ],
+  jMonthsShort: [
+    "فرو",
+    "ارد",
+    "خرد",
+    "تیر",
+    "مرد",
+    "شهر",
+    "مهر",
+    "آبا",
+    "آذر",
+    "دی",
+    "بهم",
+    "اسف",
+  ],
+  weekdays: [
+    "یکشنبه",
+    "دوشنبه",
+    "سه‌شنبه",
+    "چهارشنبه",
+    "پنج‌شنبه",
+    "جمعه",
+    "شنبه",
+  ],
+  weekdaysShort: ["یک", "دو", "سه", "چهار", "پنج", "جمعه", "شنبه"],
+  weekdaysMin: ["ی", "د", "س", "چ", "پ", "ج", "ش"],
+});
 
 interface FormFieldProps<T extends FieldValues> {
   control: Control<T>;
@@ -125,15 +175,26 @@ export function ControlledDatePicker<T extends FieldValues>({
         <DatePicker
           {...props}
           label={label}
-          value={field.value ? new Date(field.value as string) : null}
-          onChange={(date) => field.onChange(date?.toISOString().split("T")[0])}
+          value={field.value ? field.value : null}
+          onChange={(date) => field.onChange(date)}
+          format="YYYY/MM/DD"
+          views={["year", "month", "day"]}
           slotProps={{
             textField: {
               size: "small",
               fullWidth: true,
               error: error || !!fieldState.error,
               helperText: helperText || fieldState.error?.message,
+              InputProps: {
+                placeholder: "۱۴۰۴/۰۴/۲۶",
+              },
             },
+          }}
+          // Force Persian calendar by setting the adapter locale
+          localeText={{
+            fieldDayPlaceholder: () => "روز",
+            fieldMonthPlaceholder: () => "ماه",
+            fieldYearPlaceholder: () => "سال",
           }}
         />
       )}
@@ -158,8 +219,8 @@ export function ControlledTimePicker<T extends FieldValues>({
         <TimePicker
           {...props}
           label={label}
-          value={field.value ? new Date(`2000-01-01T${field.value}:00`) : null}
-          onChange={(time) => field.onChange(time?.toTimeString().slice(0, 5))}
+          value={field.value ? field.value : null}
+          onChange={(time) => field.onChange(time)}
           slotProps={{
             textField: {
               size: "small",
@@ -232,10 +293,10 @@ export function ReminderList({
   onRemove,
 }: ReminderListProps) {
   const formatReminderTime = (minutes: number) => {
-    if (minutes === 0) return "At event time";
-    if (minutes < 60) return `${minutes} minutes before`;
-    if (minutes < 1440) return `${Math.floor(minutes / 60)} hours before`;
-    return `${Math.floor(minutes / 1440)} days before`;
+    if (minutes === 0) return "هنگام شروع رویداد";
+    if (minutes < 60) return `${minutes} دقیقه قبل`;
+    if (minutes < 1440) return `${Math.floor(minutes / 60)} ساعت قبل`;
+    return `${Math.floor(minutes / 1440)} روز قبل`;
   };
 
   if (reminders.length === 0) return null;
@@ -328,10 +389,10 @@ export function AttendeeList({
               }
               variant="outlined"
             >
-              <MenuItem value="organizer">Organizer</MenuItem>
-              <MenuItem value="required">Required</MenuItem>
-              <MenuItem value="optional">Optional</MenuItem>
-              <MenuItem value="informational">Info</MenuItem>
+              <MenuItem value="organizer">برگزارکننده</MenuItem>
+              <MenuItem value="required">اجباری</MenuItem>
+              <MenuItem value="optional">اختیاری</MenuItem>
+              <MenuItem value="informational">اطلاعی</MenuItem>
             </Select>
           </FormControl>
 
@@ -346,9 +407,9 @@ export function AttendeeList({
               }
               variant="outlined"
             >
-              <MenuItem value="view">View</MenuItem>
-              <MenuItem value="edit">Edit</MenuItem>
-              <MenuItem value="full">Full</MenuItem>
+              <MenuItem value="view">مشاهده</MenuItem>
+              <MenuItem value="edit">ویرایش</MenuItem>
+              <MenuItem value="full">کامل</MenuItem>
             </Select>
           </FormControl>
 

@@ -5,6 +5,13 @@ import { Box, Typography, Paper, IconButton } from "@mui/material";
 import { ChevronLeft, ChevronRight } from "@mui/icons-material";
 import { useCalendarStore, Event } from "../stores/calendarStore";
 import { useCalendarHelpers } from "../hooks/useCalendarHelpers";
+import {
+  jalaliWeekdaysShort,
+  formatJalaliMonthYear,
+  getJalaliMonthData,
+  getJalaliDate,
+  getJalaliWeekdayShort,
+} from "../utils/jalaliHelper";
 
 interface WeekViewProps {
   onEventClick?: (event: Event) => void;
@@ -24,7 +31,6 @@ const WeekView: React.FC<WeekViewProps> = React.memo(
       getEventPosition,
       getEventsForDate,
       formatTime,
-      getDayName,
       isToday,
     } = useCalendarHelpers();
 
@@ -37,31 +43,8 @@ const WeekView: React.FC<WeekViewProps> = React.memo(
     };
 
     const renderMiniCalendar = () => {
-      const firstDayOfMonth = new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth(),
-        1
-      );
-      const lastDayOfMonth = new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth() + 1,
-        0
-      );
-      const firstDayWeekday = firstDayOfMonth.getDay();
-      const daysInMonth = lastDayOfMonth.getDate();
-
-      const days = [];
-      const weekdays = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
-
-      // Add empty cells for days before the first day of the month
-      for (let i = 0; i < firstDayWeekday; i++) {
-        days.push(null);
-      }
-
-      // Add days of the month
-      for (let day = 1; day <= daysInMonth; day++) {
-        days.push(day);
-      }
+      const { days } = getJalaliMonthData(currentDate);
+      const weekdays = jalaliWeekdaysShort;
 
       return (
         <Box sx={{ width: 280, p: 2 }}>
@@ -73,17 +56,14 @@ const WeekView: React.FC<WeekViewProps> = React.memo(
               mb: 2,
             }}
           >
-            <IconButton size="small" onClick={() => navigateWeek("prev")}>
-              <ChevronLeft />
-            </IconButton>
-            <Typography variant="h6" sx={{ fontWeight: 600 }}>
-              {currentDate.toLocaleDateString("en-US", {
-                month: "long",
-                year: "numeric",
-              })}
-            </Typography>
             <IconButton size="small" onClick={() => navigateWeek("next")}>
               <ChevronRight />
+            </IconButton>
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              {formatJalaliMonthYear(currentDate)}
+            </Typography>
+            <IconButton size="small" onClick={() => navigateWeek("prev")}>
+              <ChevronLeft />
             </IconButton>
           </Box>
 
@@ -118,51 +98,53 @@ const WeekView: React.FC<WeekViewProps> = React.memo(
               gap: 1,
             }}
           >
-            {days.map((day, index) => (
-              <Box
-                key={index}
-                sx={{
-                  height: 32,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  borderRadius: 1,
-                  cursor: day ? "pointer" : "default",
-                  backgroundColor:
-                    day === currentDate.getDate()
-                      ? "primary.main"
-                      : "transparent",
-                  color:
-                    day === currentDate.getDate() ? "white" : "text.primary",
-                  "&:hover": {
-                    backgroundColor:
-                      day && day !== currentDate.getDate()
-                        ? "action.hover"
-                        : undefined,
-                  },
-                }}
-              >
-                {day && (
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      fontWeight: day === currentDate.getDate() ? 600 : 400,
-                    }}
-                  >
-                    {day}
-                  </Typography>
-                )}
-              </Box>
-            ))}
+            {days.map((day, index) => {
+              const isToday =
+                day &&
+                day.getDate() === currentDate.getDate() &&
+                day.getMonth() === currentDate.getMonth() &&
+                day.getFullYear() === currentDate.getFullYear();
+
+              return (
+                <Box
+                  key={index}
+                  sx={{
+                    height: 32,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: 1,
+                    cursor: day ? "pointer" : "default",
+                    backgroundColor: isToday ? "primary.main" : "transparent",
+                    color: isToday ? "white" : "text.primary",
+                    "&:hover": {
+                      backgroundColor:
+                        day && !isToday ? "action.hover" : undefined,
+                    },
+                  }}
+                >
+                  {day && (
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        fontWeight: isToday ? 600 : 400,
+                      }}
+                    >
+                      {getJalaliDate(day)}
+                    </Typography>
+                  )}
+                </Box>
+              );
+            })}
           </Box>
 
           {/* Event indicators */}
           <Box sx={{ mt: 3 }}>
             <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
-              11 events
+              ۱۱ رویداد
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              View all events for this week
+              مشاهده همه رویدادهای این هفته
             </Typography>
           </Box>
         </Box>
@@ -248,7 +230,7 @@ const WeekView: React.FC<WeekViewProps> = React.memo(
                     mb: 0.5,
                   }}
                 >
-                  {getDayName(date)}
+                  {getJalaliWeekdayShort(date)}
                 </Typography>
                 <Typography
                   variant="h6"
@@ -257,7 +239,7 @@ const WeekView: React.FC<WeekViewProps> = React.memo(
                     color: isToday(date) ? "primary.main" : "text.primary",
                   }}
                 >
-                  {date.getDate()}
+                  {getJalaliDate(date)}
                 </Typography>
               </Box>
             ))}
