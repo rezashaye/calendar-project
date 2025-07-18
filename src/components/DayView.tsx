@@ -20,8 +20,8 @@ import {
 } from "../utils/jalaliHelper";
 
 interface DayViewProps {
-  onEventClick?: (event: Event) => void;
-  onEventEdit?: (event: Event) => void;
+  onEventClick?: (event: Event, mouseEvent?: React.MouseEvent) => void;
+  onEventEdit?: (event: Event, mouseEvent?: React.MouseEvent) => void;
   onDateClick?: (date: Date, mouseEvent?: React.MouseEvent) => void;
 }
 
@@ -164,7 +164,19 @@ const DayView: React.FC<DayViewProps> = React.memo(
               در حال اتفاق
             </Typography>
             {dayEvents.map((event) => (
-              <Box key={event.id} sx={{ mb: 2 }}>
+              <Box
+                key={event.id}
+                sx={{
+                  mb: 2,
+                  cursor: "pointer",
+                  "&:hover": {
+                    backgroundColor: "action.hover",
+                  },
+                  p: 1,
+                  borderRadius: 1,
+                }}
+                onClick={(e) => onEventClick?.(event, e)}
+              >
                 <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
                   {event.title}
                 </Typography>
@@ -323,6 +335,7 @@ const DayView: React.FC<DayViewProps> = React.memo(
                       elevation: 4,
                     },
                   }}
+                  onClick={(e) => onEventClick?.(event, e)}
                 >
                   <Typography
                     variant="body2"

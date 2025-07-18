@@ -13,8 +13,8 @@ import {
 } from "../utils/jalaliHelper";
 
 interface MonthViewProps {
-  onEventClick?: (event: Event) => void;
-  onEventEdit?: (event: Event) => void;
+  onEventClick?: (event: Event, mouseEvent?: React.MouseEvent) => void;
+  onEventEdit?: (event: Event, mouseEvent?: React.MouseEvent) => void;
   onDateClick?: (date: Date, mouseEvent?: React.MouseEvent) => void;
 }
 
@@ -79,7 +79,12 @@ const MonthView: React.FC<MonthViewProps> = React.memo(
                 overflow: "hidden",
                 textOverflow: "ellipsis",
                 whiteSpace: "nowrap",
+                cursor: "pointer",
+                "&:hover": {
+                  opacity: 0.8,
+                },
               }}
+              onClick={(e) => onEventClick?.(event, e)}
             >
               {event.title}
             </Box>

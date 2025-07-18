@@ -82,27 +82,7 @@ export default function CalendarApp() {
   }
 
   // Event handlers
-  const handleEventClick = (event: Event) => {
-    setEventPopover({
-      open: true,
-      anchorEl: null,
-      event,
-      mode: "edit",
-      defaultDate: new Date(event.startDate),
-    });
-  };
-
-  const handleEventEdit = (event: Event) => {
-    setEventPopover({
-      open: true,
-      anchorEl: null,
-      event,
-      mode: "edit",
-      defaultDate: new Date(event.startDate),
-    });
-  };
-
-  const handleDateClick = (date: Date, mouseEvent?: React.MouseEvent) => {
+  const handleEventClick = (event: Event, mouseEvent?: React.MouseEvent) => {
     const anchorPosition = mouseEvent
       ? {
           top: mouseEvent.clientY,
@@ -113,11 +93,36 @@ export default function CalendarApp() {
     setEventPopover({
       open: true,
       anchorEl: null,
-      event: null,
-      mode: "create",
-      defaultDate: date,
+      event,
+      mode: "edit",
+      defaultDate: new Date(event.startDate),
       anchorPosition,
     });
+  };
+
+  const handleEventEdit = (event: Event, mouseEvent?: React.MouseEvent) => {
+    const anchorPosition = mouseEvent
+      ? {
+          top: mouseEvent.clientY,
+          left: mouseEvent.clientX,
+        }
+      : undefined;
+
+    setEventPopover({
+      open: true,
+      anchorEl: null,
+      event,
+      mode: "edit",
+      defaultDate: new Date(event.startDate),
+      anchorPosition,
+    });
+  };
+
+  const handleDateClick = (date: Date) => {
+    // Date click functionality disabled - users can only add events through the header button
+    // Just update the selected date for visual feedback
+    const { setSelectedDate } = useCalendarStore.getState();
+    setSelectedDate(date);
   };
 
   const handleAddEventClick = (anchorEl: HTMLElement) => {

@@ -14,8 +14,8 @@ import {
 } from "../utils/jalaliHelper";
 
 interface WeekViewProps {
-  onEventClick?: (event: Event) => void;
-  onEventEdit?: (event: Event) => void;
+  onEventClick?: (event: Event, mouseEvent?: React.MouseEvent) => void;
+  onEventEdit?: (event: Event, mouseEvent?: React.MouseEvent) => void;
   onDateClick?: (date: Date, mouseEvent?: React.MouseEvent) => void;
 }
 
@@ -310,8 +310,8 @@ const WeekView: React.FC<WeekViewProps> = React.memo(
                           elevation: 3,
                         },
                       }}
-                      onClick={() => onEventClick?.(event)}
-                      onDoubleClick={() => onEventEdit?.(event)}
+                      onClick={(e) => onEventClick?.(event, e)}
+                      onDoubleClick={(e) => onEventEdit?.(event, e)}
                     >
                       <Typography
                         variant="caption"

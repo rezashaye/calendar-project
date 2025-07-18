@@ -9,8 +9,8 @@ import {
   Switch,
   FormHelperText,
   Box,
-  Chip,
   IconButton,
+  Typography,
 } from "@mui/material";
 import { DatePicker, TimePicker } from "@mui/x-date-pickers";
 import { Controller, Control, FieldPath, FieldValues } from "react-hook-form";
@@ -252,27 +252,55 @@ export function ControlledColorPicker({
       name={name}
       control={control}
       render={({ field }) => (
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
           {colors.map((color) => (
             <Box
               key={color.value}
               sx={{
-                width: 32,
-                height: 32,
-                borderRadius: "50%",
+                position: "relative",
+                width: 40,
+                height: 40,
+                borderRadius: 2,
                 backgroundColor: color.value,
                 cursor: "pointer",
-                border: field.value === color.value ? "3px solid" : "2px solid",
-                borderColor:
-                  field.value === color.value ? "primary.main" : "grey.300",
+                border: "3px solid transparent",
                 transition: "all 0.2s ease",
                 "&:hover": {
                   transform: "scale(1.1)",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
                 },
+                ...(field.value === color.value && {
+                  border: "3px solid #fff",
+                  boxShadow: `0 0 0 2px ${color.value}, 0 4px 12px rgba(0,0,0,0.2)`,
+                  transform: "scale(1.05)",
+                }),
               }}
               onClick={() => field.onChange(color.value)}
               title={color.name}
-            />
+            >
+              {field.value === color.value && (
+                <Box
+                  sx={{
+                    position: "absolute",
+                    top: "50%",
+                    left: "50%",
+                    transform: "translate(-50%, -50%)",
+                    width: 16,
+                    height: 16,
+                    backgroundColor: "rgba(255,255,255,0.9)",
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 12,
+                    fontWeight: "bold",
+                    color: color.value,
+                  }}
+                >
+                  ✓
+                </Box>
+              )}
+            </Box>
           ))}
         </Box>
       )}
@@ -299,21 +327,94 @@ export function ReminderList({
     return `${Math.floor(minutes / 1440)} روز قبل`;
   };
 
-  if (reminders.length === 0) return null;
+  const getReminderTypeLabel = (type: string) => {
+    switch (type) {
+      case "notification":
+        return "اعلان";
+      case "email":
+        return "ایمیل";
+      case "sms":
+        return "پیامک";
+      default:
+        return type;
+    }
+  };
+
+  if (reminders.length === 0) {
+    return (
+      <Box
+        sx={{
+          textAlign: "center",
+          py: 3,
+          color: "text.secondary",
+          fontStyle: "italic",
+        }}
+      >
+        هیچ یادآوری‌ای تنظیم نشده است
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ mb: 2 }}>
       {reminders.map((reminder) => (
-        <Chip
+        <Box
           key={reminder.id}
-          label={`${formatReminderTime(reminder.timeBeforeEvent)} (${
-            reminder.type
-          })`}
-          onDelete={() => onRemove(reminder.id)}
-          color={reminder.isEnabled ? "primary" : "default"}
-          sx={{ mr: 1, mb: 1 }}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            p: 1.5,
+            mb: 1,
+            borderRadius: 2,
+            border: "1px solid",
+            borderColor: reminder.isEnabled ? "primary.light" : "grey.300",
+            backgroundColor: reminder.isEnabled
+              ? "rgba(25, 118, 210, 0.05)"
+              : "rgba(0, 0, 0, 0.02)",
+            transition: "all 0.2s ease",
+            cursor: "pointer",
+            "&:hover": {
+              backgroundColor: reminder.isEnabled
+                ? "rgba(25, 118, 210, 0.1)"
+                : "rgba(0, 0, 0, 0.04)",
+            },
+          }}
           onClick={() => onToggle(reminder.id)}
-        />
+        >
+          <Box sx={{ display: "flex", alignItems: "center", flexGrow: 1 }}>
+            <Box
+              sx={{
+                width: 8,
+                height: 8,
+                borderRadius: "50%",
+                backgroundColor: reminder.isEnabled ? "primary.main" : "grey.400",
+                mr: 1,
+              }}
+            />
+            <Box>
+              <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                {formatReminderTime(reminder.timeBeforeEvent)}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {getReminderTypeLabel(reminder.type)}
+              </Typography>
+            </Box>
+          </Box>
+          <IconButton
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemove(reminder.id);
+            }}
+            sx={{ 
+              color: "error.main",
+              "&:hover": { backgroundColor: "error.lighter" },
+            }}
+          >
+            <DeleteIcon fontSize="small" />
+          </IconButton>
+        </Box>
       ))}
     </Box>
   );
@@ -336,7 +437,20 @@ export function AttendeeList({
   onUpdatePermissions,
   onRemove,
 }: AttendeeListProps) {
-  if (attendees.length === 0) return null;
+  if (attendees.length === 0) {
+    return (
+      <Box
+        sx={{
+          textAlign: "center",
+          py: 3,
+          color: "text.secondary",
+          fontStyle: "italic",
+        }}
+      >
+        هیچ شرکت‌کننده‌ای اضافه نشده است
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ mb: 2 }}>
@@ -347,79 +461,124 @@ export function AttendeeList({
             display: "flex",
             alignItems: "center",
             mb: 1,
-            p: 1,
+            p: 2,
             border: "1px solid",
-            borderColor: "grey.300",
-            borderRadius: 1,
-            gap: 1,
+            borderColor: "grey.200",
+            borderRadius: 2,
+            gap: 1.5,
+            backgroundColor: "background.paper",
+            transition: "all 0.2s ease",
+            "&:hover": {
+              borderColor: "primary.light",
+              backgroundColor: "rgba(25, 118, 210, 0.02)",
+            },
           }}
         >
           <Box sx={{ display: "flex", alignItems: "center", flex: 1 }}>
-            {attendee.person.avatar && (
+            {attendee.person.avatar ? (
               <Box
                 component="img"
                 src={attendee.person.avatar}
                 alt={attendee.person.name}
                 sx={{
-                  width: 24,
-                  height: 24,
+                  width: 32,
+                  height: 32,
                   borderRadius: "50%",
-                  mr: 1,
+                  mr: 1.5,
+                  border: "2px solid",
+                  borderColor: "grey.200",
                 }}
               />
+            ) : (
+              <Box
+                sx={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: "50%",
+                  mr: 1.5,
+                  backgroundColor: "primary.main",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "white",
+                  fontWeight: "bold",
+                  fontSize: "0.875rem",
+                }}
+              >
+                {attendee.person.name.charAt(0)}
+              </Box>
             )}
             <Box>
-              <Box sx={{ fontWeight: 500, fontSize: "0.875rem" }}>
+              <Typography variant="body2" sx={{ fontWeight: 500 }}>
                 {attendee.person.name}
-              </Box>
-              <Box sx={{ fontSize: "0.75rem", color: "text.secondary" }}>
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
                 {attendee.person.email}
-              </Box>
+              </Typography>
             </Box>
           </Box>
 
-          <FormControl size="small" sx={{ minWidth: 80 }}>
-            <Select
-              value={attendee.role}
-              onChange={(e) =>
-                onUpdateRole(
-                  attendee.id,
-                  e.target.value as EventAttendee["role"]
-                )
-              }
-              variant="outlined"
-            >
-              <MenuItem value="organizer">برگزارکننده</MenuItem>
-              <MenuItem value="required">اجباری</MenuItem>
-              <MenuItem value="optional">اختیاری</MenuItem>
-              <MenuItem value="informational">اطلاعی</MenuItem>
-            </Select>
-          </FormControl>
+          <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+            <FormControl size="small" sx={{ minWidth: 90 }}>
+              <Select
+                value={attendee.role}
+                onChange={(e) =>
+                  onUpdateRole(
+                    attendee.id,
+                    e.target.value as EventAttendee["role"]
+                  )
+                }
+                variant="outlined"
+                displayEmpty
+                sx={{
+                  "& .MuiSelect-select": {
+                    fontSize: "0.75rem",
+                    py: 0.5,
+                  },
+                }}
+              >
+                <MenuItem value="organizer">برگزارکننده</MenuItem>
+                <MenuItem value="required">اجباری</MenuItem>
+                <MenuItem value="optional">اختیاری</MenuItem>
+                <MenuItem value="informational">اطلاعی</MenuItem>
+              </Select>
+            </FormControl>
 
-          <FormControl size="small" sx={{ minWidth: 60 }}>
-            <Select
-              value={attendee.permissions}
-              onChange={(e) =>
-                onUpdatePermissions(
-                  attendee.id,
-                  e.target.value as EventAttendee["permissions"]
-                )
-              }
-              variant="outlined"
-            >
-              <MenuItem value="view">مشاهده</MenuItem>
-              <MenuItem value="edit">ویرایش</MenuItem>
-              <MenuItem value="full">کامل</MenuItem>
-            </Select>
-          </FormControl>
+            <FormControl size="small" sx={{ minWidth: 70 }}>
+              <Select
+                value={attendee.permissions}
+                onChange={(e) =>
+                  onUpdatePermissions(
+                    attendee.id,
+                    e.target.value as EventAttendee["permissions"]
+                  )
+                }
+                variant="outlined"
+                displayEmpty
+                sx={{
+                  "& .MuiSelect-select": {
+                    fontSize: "0.75rem",
+                    py: 0.5,
+                  },
+                }}
+              >
+                <MenuItem value="view">مشاهده</MenuItem>
+                <MenuItem value="edit">ویرایش</MenuItem>
+                <MenuItem value="full">کامل</MenuItem>
+              </Select>
+            </FormControl>
 
-          <IconButton
-            size="small"
-            onClick={() => onRemove(attendee.id)}
-            color="error"
-          >
-            <DeleteIcon fontSize="small" />
-          </IconButton>
+            <IconButton
+              size="small"
+              onClick={() => onRemove(attendee.id)}
+              sx={{
+                color: "error.main",
+                "&:hover": { backgroundColor: "error.lighter" },
+              }}
+            >
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          </Box>
         </Box>
       ))}
     </Box>

@@ -16,6 +16,14 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
+  Tabs,
+  Tab,
+  Divider,
+  Chip,
+  alpha,
+  Collapse,
+  Fade,
+  Slide,
 } from "@mui/material";
 import {
   Close as CloseIcon,
@@ -27,6 +35,11 @@ import {
   Add as AddIcon,
   People as PeopleIcon,
   PersonAdd as PersonAddIcon,
+  Settings as SettingsIcon,
+  Schedule as ScheduleIcon,
+  LocationOn as LocationIcon,
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon,
 } from "@mui/icons-material";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
@@ -119,6 +132,28 @@ interface EventPopoverProps {
   anchorPosition?: { top: number; left: number };
 }
 
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
+
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`event-tabpanel-${index}`}
+      aria-labelledby={`event-tab-${index}`}
+      {...other}
+    >
+      {value === index && <Box sx={{ py: 2 }}>{children}</Box>}
+    </div>
+  );
+}
+
 const eventColors = [
   { name: "آبی", value: "#2196f3" },
   { name: "سبز", value: "#4caf50" },
@@ -156,6 +191,17 @@ const EventPopover: React.FC<EventPopoverProps> = ({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
+  // Tab state
+  const [tabValue, setTabValue] = useState(0);
+
+  // Expandable sections state
+  const [expandedSections, setExpandedSections] = useState({
+    advanced: false,
+    reminders: false,
+    attendees: false,
+    comments: false,
+  });
+
   // Form state for managing new reminders and attendees
   const [newReminder, setNewReminder] = useState<Omit<Reminder, "id">>({
     type: "notification",
@@ -168,6 +214,26 @@ const EventPopover: React.FC<EventPopoverProps> = ({
     useState<EventAttendee["role"]>("required");
   const [attendeePermissions, setAttendeePermissions] =
     useState<EventAttendee["permissions"]>("view");
+
+  // Reset states when popover opens/closes
+  useEffect(() => {
+    if (open) {
+      setTabValue(0);
+      setExpandedSections({
+        advanced: false,
+        reminders: false,
+        attendees: false,
+        comments: false,
+      });
+    }
+  }, [open]);
+
+  const toggleSection = (section: keyof typeof expandedSections) => {
+    setExpandedSections((prev) => ({
+      ...prev,
+      [section]: !prev[section],
+    }));
+  };
 
   // Prepare default values for the form
   const getDefaultValues = (): Partial<EventFormData> => {
@@ -430,333 +496,658 @@ const EventPopover: React.FC<EventPopoverProps> = ({
           horizontal: "left",
         }}
         anchorPosition={anchorPosition}
+        anchorReference={anchorPosition ? "anchorPosition" : "anchorEl"}
         PaperProps={{
           sx: {
-            width: isMobile ? "90vw" : 500,
-            maxWidth: 500,
-            maxHeight: isMobile ? "90vh" : 600,
+            width: isMobile ? "90vw" : 480,
+            maxWidth: 480,
+            maxHeight: isMobile ? "90vh" : 700,
             overflowY: "auto",
-            borderRadius: 2,
-            boxShadow: "0 8px 32px rgba(0, 0, 0, 0.12)",
+            borderRadius: 3,
+            boxShadow: "0 20px 40px rgba(0, 0, 0, 0.15)",
             mt: 1,
+            background: "linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)",
           },
         }}
+        TransitionComponent={Fade}
       >
-        <Card elevation={0}>
-          <CardContent sx={{ p: 3 }}>
-            {/* Header */}
-            <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-              <EventIcon sx={{ mr: 1, color: "primary.main" }} />
-              <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 600 }}>
-                {mode === "create" ? "ایجاد رویداد" : "ویرایش رویداد"}
-              </Typography>
-              <IconButton
-                onClick={onClose}
-                size="small"
-                sx={{ color: "text.secondary" }}
+        <Card elevation={0} sx={{ borderRadius: 3 }}>
+          <CardContent sx={{ p: 0 }}>
+            {/* Modern Header */}
+            <Box
+              sx={{
+                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                color: "white",
+                p: 3,
+                borderRadius: "12px 12px 0 0",
+                position: "relative",
+                overflow: "hidden",
+                "&::before": {
+                  content: '""',
+                  position: "absolute",
+                  top: 0,
+                  right: 0,
+                  width: "100px",
+                  height: "100px",
+                  background: alpha("#ffffff", 0.1),
+                  borderRadius: "50%",
+                  transform: "translate(30px, -30px)",
+                },
+              }}
+            >
+              <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                <Box
+                  sx={{
+                    p: 1,
+                    borderRadius: 2,
+                    background: alpha("#ffffff", 0.2),
+                    mr: 2,
+                  }}
+                >
+                  <EventIcon sx={{ fontSize: 20 }} />
+                </Box>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    flexGrow: 1,
+                    fontWeight: 700,
+                    fontSize: "1.1rem",
+                    letterSpacing: "0.5px",
+                  }}
+                >
+                  {mode === "create" ? "ایجاد رویداد جدید" : "ویرایش رویداد"}
+                </Typography>
+                <IconButton
+                  onClick={onClose}
+                  size="small"
+                  sx={{
+                    color: "white",
+                    background: alpha("#ffffff", 0.1),
+                    "&:hover": { background: alpha("#ffffff", 0.2) },
+                  }}
+                >
+                  <CloseIcon />
+                </IconButton>
+              </Box>
+              <Typography
+                variant="body2"
+                sx={{
+                  opacity: 0.9,
+                  fontSize: "0.875rem",
+                  letterSpacing: "0.3px",
+                }}
               >
-                <CloseIcon />
-              </IconButton>
+                {mode === "create"
+                  ? "جزئیات رویداد خود را وارد کنید"
+                  : "اطلاعات رویداد را تغییر دهید"}
+              </Typography>
             </Box>
 
-            {/* Form */}
-            <form onSubmit={handleSubmit(onSubmit)}>
-              <Stack spacing={2}>
-                {/* Title */}
-                <ControlledTextField
-                  control={control}
-                  name="title"
-                  label="عنوان رویداد"
-                  autoFocus
-                  required
-                />
-
-                {/* Description */}
-                <ControlledTextField
-                  control={control}
-                  name="description"
-                  label="توضیحات"
-                  multiline
-                  rows={2}
-                  placeholder="توضیحات رویداد را اضافه کنید"
-                />
-
-                {/* Location */}
-                <ControlledTextField
-                  control={control}
-                  name="location"
-                  label="محل برگزاری"
-                  placeholder="محل برگزاری رویداد را اضافه کنید"
-                />
-
-                {/* All Day Toggle */}
-                <ControlledSwitch
-                  control={control}
-                  name="isAllDay"
-                  label="تمام روز"
-                />
-
-                {/* Date Selection */}
-                <Box sx={{ display: "flex", gap: 1 }}>
-                  <ControlledDatePicker
-                    control={control}
-                    name="startDate"
-                    label="تاریخ شروع"
+            {/* Content Container */}
+            <Box sx={{ p: 3 }}>
+              {/* Tab Navigation */}
+              <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 3 }}>
+                <Tabs
+                  value={tabValue}
+                  onChange={(_, newValue) => setTabValue(newValue)}
+                  variant="fullWidth"
+                  sx={{
+                    minHeight: 40,
+                    "& .MuiTab-root": {
+                      minHeight: 40,
+                      textTransform: "none",
+                      fontWeight: 500,
+                      fontSize: "0.875rem",
+                    },
+                  }}
+                >
+                  <Tab
+                    icon={<ScheduleIcon sx={{ fontSize: 18 }} />}
+                    label="اطلاعات اصلی"
+                    iconPosition="start"
                   />
-                  <ControlledDatePicker
-                    control={control}
-                    name="endDate"
-                    label="تاریخ پایان"
+                  <Tab
+                    icon={<SettingsIcon sx={{ fontSize: 18 }} />}
+                    label="تنظیمات"
+                    iconPosition="start"
                   />
-                </Box>
+                </Tabs>
+              </Box>
 
-                {/* Time Selection */}
-                {!isAllDay && (
-                  <Box sx={{ display: "flex", gap: 1 }}>
-                    <ControlledTimePicker
-                      control={control}
-                      name="startTime"
-                      label="زمان شروع"
-                    />
-                    <ControlledTimePicker
-                      control={control}
-                      name="endTime"
-                      label="زمان پایان"
-                    />
-                  </Box>
-                )}
-
-                {/* Color Selection */}
-                <Box>
-                  <Typography
-                    variant="subtitle2"
-                    sx={{ mb: 1, display: "flex", alignItems: "center" }}
-                  >
-                    <ColorLensIcon sx={{ mr: 1, fontSize: 16 }} />
-                    رنگ
-                  </Typography>
-                  <ControlledColorPicker
-                    control={control}
-                    name="color"
-                    colors={eventColors}
-                  />
-                </Box>
-
-                {/* Reminders Section */}
-                <Box>
-                  <Typography
-                    variant="subtitle2"
-                    sx={{ mb: 1, display: "flex", alignItems: "center" }}
-                  >
-                    <NotificationsIcon sx={{ mr: 1, fontSize: 16 }} />
-                    یادآوری‌ها
-                  </Typography>
-
-                  <ReminderList
-                    reminders={reminders.items}
-                    onToggle={toggleReminder}
-                    onRemove={(id) => {
-                      const index = reminders.items.findIndex(
-                        (r) => r.id === id
-                      );
-                      if (index !== -1) reminders.remove(index);
-                    }}
-                  />
-
-                  {/* Add New Reminder */}
-                  <Box
-                    sx={{
-                      display: "flex",
-                      gap: 1,
-                      alignItems: "center",
-                      flexWrap: "wrap",
-                    }}
-                  >
-                    <FormControl size="small" sx={{ minWidth: 120 }}>
-                      <InputLabel>زمان</InputLabel>
-                      <Select
-                        value={newReminder.timeBeforeEvent}
-                        onChange={(e) =>
-                          setNewReminder((prev) => ({
-                            ...prev,
-                            timeBeforeEvent: Number(e.target.value),
-                          }))
-                        }
-                        label="زمان"
+              {/* Form */}
+              <form onSubmit={handleSubmit(onSubmit)}>
+                <TabPanel value={tabValue} index={0}>
+                  <Stack spacing={2.5}>
+                    {/* Essential Information */}
+                    <Box>
+                      <Typography
+                        variant="subtitle1"
+                        sx={{
+                          fontWeight: 600,
+                          mb: 2,
+                          color: "text.primary",
+                          fontSize: "1rem",
+                        }}
                       >
-                        {reminderTimeOptions.map((option) => (
-                          <MenuItem key={option.value} value={option.value}>
-                            {option.label}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
+                        اطلاعات اصلی
+                      </Typography>
 
-                    <FormControl size="small" sx={{ minWidth: 100 }}>
-                      <InputLabel>نوع</InputLabel>
-                      <Select
-                        value={newReminder.type}
-                        onChange={(e) =>
-                          setNewReminder((prev) => ({
-                            ...prev,
-                            type: e.target.value as
-                              | "email"
-                              | "notification"
-                              | "sms",
-                          }))
-                        }
-                        label="نوع"
-                      >
-                        <MenuItem value="notification">اعلان</MenuItem>
-                        <MenuItem value="email">ایمیل</MenuItem>
-                        <MenuItem value="sms">پیامک</MenuItem>
-                      </Select>
-                    </FormControl>
-
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      onClick={addReminder}
-                      startIcon={<AddIcon />}
-                    >
-                      افزودن
-                    </Button>
-                  </Box>
-                </Box>
-
-                {/* Attendees Section */}
-                <Box>
-                  <Typography
-                    variant="subtitle2"
-                    sx={{ mb: 1, display: "flex", alignItems: "center" }}
-                  >
-                    <PeopleIcon sx={{ mr: 1, fontSize: 16 }} />
-                    اشتراک‌گذاری با افراد
-                  </Typography>
-
-                  <AttendeeList
-                    attendees={attendees.items}
-                    onUpdateRole={updateAttendeeRole}
-                    onUpdatePermissions={updateAttendeePermissions}
-                    onRemove={(id) => {
-                      const index = attendees.items.findIndex(
-                        (a) => a.id === id
-                      );
-                      if (index !== -1) attendees.remove(index);
-                    }}
-                  />
-
-                  {/* Add New Attendee */}
-                  {availablePeople.length > 0 && (
-                    <Box
-                      sx={{
-                        display: "flex",
-                        gap: 1,
-                        alignItems: "center",
-                        flexWrap: "wrap",
-                      }}
-                    >
-                      <FormControl size="small" sx={{ minWidth: 160 }}>
-                        <InputLabel>انتخاب شخص</InputLabel>
-                        <Select
-                          value={selectedPerson?.id || ""}
-                          onChange={(e) => {
-                            const person = availablePeople.find(
-                              (p) => p.id === e.target.value
-                            );
-                            setSelectedPerson(person || null);
+                      <Stack spacing={2}>
+                        <ControlledTextField
+                          control={control}
+                          name="title"
+                          label="عنوان رویداد"
+                          autoFocus
+                          required
+                          sx={{
+                            "& .MuiOutlinedInput-root": {
+                              borderRadius: 2,
+                              fontSize: "1rem",
+                            },
                           }}
-                          label="انتخاب شخص"
-                        >
-                          {availablePeople.map((person) => (
-                            <MenuItem key={person.id} value={person.id}>
-                              <Box
-                                sx={{ display: "flex", alignItems: "center" }}
-                              >
-                                {person.avatar && (
-                                  <Box
-                                    component="img"
-                                    src={person.avatar}
-                                    alt={person.name}
-                                    sx={{
-                                      width: 20,
-                                      height: 20,
-                                      borderRadius: "50%",
-                                      mr: 1,
-                                    }}
-                                  />
-                                )}
-                                {person.name}
-                              </Box>
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
+                        />
 
-                      <FormControl size="small" sx={{ minWidth: 80 }}>
-                        <InputLabel>نقش</InputLabel>
-                        <Select
-                          value={attendeeRole}
-                          onChange={(e) =>
-                            setAttendeeRole(
-                              e.target.value as EventAttendee["role"]
-                            )
-                          }
-                          label="نقش"
-                        >
-                          <MenuItem value="organizer">برگزارکننده</MenuItem>
-                          <MenuItem value="required">اجباری</MenuItem>
-                          <MenuItem value="optional">اختیاری</MenuItem>
-                          <MenuItem value="informational">اطلاعی</MenuItem>
-                        </Select>
-                      </FormControl>
+                        <ControlledTextField
+                          control={control}
+                          name="description"
+                          label="توضیحات"
+                          multiline
+                          rows={2}
+                          placeholder="توضیحات اختیاری برای رویداد"
+                          sx={{
+                            "& .MuiOutlinedInput-root": {
+                              borderRadius: 2,
+                            },
+                          }}
+                        />
 
-                      <FormControl size="small" sx={{ minWidth: 60 }}>
-                        <InputLabel>دسترسی</InputLabel>
-                        <Select
-                          value={attendeePermissions}
-                          onChange={(e) =>
-                            setAttendeePermissions(
-                              e.target.value as EventAttendee["permissions"]
-                            )
-                          }
-                          label="دسترسی"
-                        >
-                          <MenuItem value="view">مشاهده</MenuItem>
-                          <MenuItem value="edit">ویرایش</MenuItem>
-                          <MenuItem value="full">کامل</MenuItem>
-                        </Select>
-                      </FormControl>
-
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        onClick={addAttendee}
-                        startIcon={<PersonAddIcon />}
-                        disabled={!selectedPerson}
-                      >
-                        افزودن
-                      </Button>
+                        <ControlledTextField
+                          control={control}
+                          name="location"
+                          label="محل برگزاری"
+                          placeholder="آدرس یا محل برگزاری"
+                          InputProps={{
+                            startAdornment: (
+                              <LocationIcon
+                                sx={{ color: "text.secondary", mr: 1 }}
+                              />
+                            ),
+                          }}
+                          sx={{
+                            "& .MuiOutlinedInput-root": {
+                              borderRadius: 2,
+                            },
+                          }}
+                        />
+                      </Stack>
                     </Box>
-                  )}
-                </Box>
 
-                {/* Comments Section */}
-                <CommentsSection
-                  comments={comments.items}
-                  onAddComment={addComment}
-                  onUpdateComment={updateComment}
-                  onDeleteComment={deleteComment}
-                  currentUserId="current-user"
-                  maxHeight={150}
-                />
+                    <Divider sx={{ my: 1 }} />
+
+                    {/* Date & Time */}
+                    <Box>
+                      <Typography
+                        variant="subtitle1"
+                        sx={{
+                          fontWeight: 600,
+                          mb: 2,
+                          color: "text.primary",
+                          fontSize: "1rem",
+                        }}
+                      >
+                        زمان‌بندی
+                      </Typography>
+
+                      <Stack spacing={2}>
+                        <ControlledSwitch
+                          control={control}
+                          name="isAllDay"
+                          label="تمام روز"
+                        />
+
+                        <Box sx={{ display: "flex", gap: 1.5 }}>
+                          <ControlledDatePicker
+                            control={control}
+                            name="startDate"
+                            label="تاریخ شروع"
+                          />
+                          <ControlledDatePicker
+                            control={control}
+                            name="endDate"
+                            label="تاریخ پایان"
+                          />
+                        </Box>
+
+                        {!isAllDay && (
+                          <Slide
+                            direction="up"
+                            in={!isAllDay}
+                            mountOnEnter
+                            unmountOnExit
+                          >
+                            <Box sx={{ display: "flex", gap: 1.5 }}>
+                              <ControlledTimePicker
+                                control={control}
+                                name="startTime"
+                                label="زمان شروع"
+                              />
+                              <ControlledTimePicker
+                                control={control}
+                                name="endTime"
+                                label="زمان پایان"
+                              />
+                            </Box>
+                          </Slide>
+                        )}
+                      </Stack>
+                    </Box>
+
+                    <Divider sx={{ my: 1 }} />
+
+                    {/* Color Selection */}
+                    <Box>
+                      <Typography
+                        variant="subtitle1"
+                        sx={{
+                          fontWeight: 600,
+                          mb: 2,
+                          color: "text.primary",
+                          fontSize: "1rem",
+                          display: "flex",
+                          alignItems: "center",
+                        }}
+                      >
+                        <ColorLensIcon sx={{ mr: 1, fontSize: 18 }} />
+                        رنگ رویداد
+                      </Typography>
+                      <ControlledColorPicker
+                        control={control}
+                        name="color"
+                        colors={eventColors}
+                      />
+                    </Box>
+                  </Stack>
+                </TabPanel>
+
+                <TabPanel value={tabValue} index={1}>
+                  <Stack spacing={3}>
+                    {/* Reminders */}
+                    <Box>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          mb: 2,
+                          cursor: "pointer",
+                        }}
+                        onClick={() => toggleSection("reminders")}
+                      >
+                        <Typography
+                          variant="subtitle1"
+                          sx={{
+                            fontWeight: 600,
+                            color: "text.primary",
+                            fontSize: "1rem",
+                            display: "flex",
+                            alignItems: "center",
+                          }}
+                        >
+                          <NotificationsIcon sx={{ mr: 1, fontSize: 18 }} />
+                          یادآوری‌ها
+                          <Chip
+                            label={reminders.items.length}
+                            size="small"
+                            sx={{ ml: 1 }}
+                          />
+                        </Typography>
+                        {expandedSections.reminders ? (
+                          <ExpandLessIcon />
+                        ) : (
+                          <ExpandMoreIcon />
+                        )}
+                      </Box>
+
+                      <Collapse in={expandedSections.reminders}>
+                        <Stack spacing={2}>
+                          <ReminderList
+                            reminders={reminders.items}
+                            onToggle={toggleReminder}
+                            onRemove={(id) => {
+                              const index = reminders.items.findIndex(
+                                (r) => r.id === id
+                              );
+                              if (index !== -1) reminders.remove(index);
+                            }}
+                          />
+
+                          <Box
+                            sx={{
+                              p: 2,
+                              borderRadius: 2,
+                              background: alpha(
+                                theme.palette.primary.main,
+                                0.05
+                              ),
+                              border: `1px solid ${alpha(
+                                theme.palette.primary.main,
+                                0.1
+                              )}`,
+                            }}
+                          >
+                            <Typography
+                              variant="subtitle2"
+                              sx={{ mb: 1.5, fontWeight: 600 }}
+                            >
+                              افزودن یادآوری جدید
+                            </Typography>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                gap: 1,
+                                alignItems: "center",
+                                flexWrap: "wrap",
+                              }}
+                            >
+                              <FormControl size="small" sx={{ minWidth: 120 }}>
+                                <InputLabel>زمان</InputLabel>
+                                <Select
+                                  value={newReminder.timeBeforeEvent}
+                                  onChange={(e) =>
+                                    setNewReminder((prev) => ({
+                                      ...prev,
+                                      timeBeforeEvent: Number(e.target.value),
+                                    }))
+                                  }
+                                  label="زمان"
+                                >
+                                  {reminderTimeOptions.map((option) => (
+                                    <MenuItem
+                                      key={option.value}
+                                      value={option.value}
+                                    >
+                                      {option.label}
+                                    </MenuItem>
+                                  ))}
+                                </Select>
+                              </FormControl>
+
+                              <FormControl size="small" sx={{ minWidth: 100 }}>
+                                <InputLabel>نوع</InputLabel>
+                                <Select
+                                  value={newReminder.type}
+                                  onChange={(e) =>
+                                    setNewReminder((prev) => ({
+                                      ...prev,
+                                      type: e.target.value as
+                                        | "email"
+                                        | "notification"
+                                        | "sms",
+                                    }))
+                                  }
+                                  label="نوع"
+                                >
+                                  <MenuItem value="notification">
+                                    اعلان
+                                  </MenuItem>
+                                  <MenuItem value="email">ایمیل</MenuItem>
+                                  <MenuItem value="sms">پیامک</MenuItem>
+                                </Select>
+                              </FormControl>
+
+                              <Button
+                                variant="contained"
+                                size="small"
+                                onClick={addReminder}
+                                startIcon={<AddIcon />}
+                                sx={{
+                                  borderRadius: 2,
+                                  textTransform: "none",
+                                  fontWeight: 500,
+                                }}
+                              >
+                                افزودن
+                              </Button>
+                            </Box>
+                          </Box>
+                        </Stack>
+                      </Collapse>
+                    </Box>
+
+                    <Divider />
+
+                    {/* Attendees */}
+                    <Box>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          mb: 2,
+                          cursor: "pointer",
+                        }}
+                        onClick={() => toggleSection("attendees")}
+                      >
+                        <Typography
+                          variant="subtitle1"
+                          sx={{
+                            fontWeight: 600,
+                            color: "text.primary",
+                            fontSize: "1rem",
+                            display: "flex",
+                            alignItems: "center",
+                          }}
+                        >
+                          <PeopleIcon sx={{ mr: 1, fontSize: 18 }} />
+                          شرکت‌کنندگان
+                          <Chip
+                            label={attendees.items.length}
+                            size="small"
+                            sx={{ ml: 1 }}
+                          />
+                        </Typography>
+                        {expandedSections.attendees ? (
+                          <ExpandLessIcon />
+                        ) : (
+                          <ExpandMoreIcon />
+                        )}
+                      </Box>
+
+                      <Collapse in={expandedSections.attendees}>
+                        <Stack spacing={2}>
+                          <AttendeeList
+                            attendees={attendees.items}
+                            onUpdateRole={updateAttendeeRole}
+                            onUpdatePermissions={updateAttendeePermissions}
+                            onRemove={(id) => {
+                              const index = attendees.items.findIndex(
+                                (a) => a.id === id
+                              );
+                              if (index !== -1) attendees.remove(index);
+                            }}
+                          />
+
+                          {availablePeople.length > 0 && (
+                            <Box
+                              sx={{
+                                p: 2,
+                                borderRadius: 2,
+                                background: alpha(
+                                  theme.palette.secondary.main,
+                                  0.05
+                                ),
+                                border: `1px solid ${alpha(
+                                  theme.palette.secondary.main,
+                                  0.1
+                                )}`,
+                              }}
+                            >
+                              <Typography
+                                variant="subtitle2"
+                                sx={{ mb: 1.5, fontWeight: 600 }}
+                              >
+                                افزودن شرکت‌کننده
+                              </Typography>
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  gap: 1,
+                                  alignItems: "center",
+                                  flexWrap: "wrap",
+                                }}
+                              >
+                                <FormControl
+                                  size="small"
+                                  sx={{ minWidth: 160 }}
+                                >
+                                  <InputLabel>انتخاب شخص</InputLabel>
+                                  <Select
+                                    value={selectedPerson?.id || ""}
+                                    onChange={(e) => {
+                                      const person = availablePeople.find(
+                                        (p) => p.id === e.target.value
+                                      );
+                                      setSelectedPerson(person || null);
+                                    }}
+                                    label="انتخاب شخص"
+                                  >
+                                    {availablePeople.map((person) => (
+                                      <MenuItem
+                                        key={person.id}
+                                        value={person.id}
+                                      >
+                                        <Box
+                                          sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                          }}
+                                        >
+                                          {person.avatar && (
+                                            <Box
+                                              component="img"
+                                              src={person.avatar}
+                                              alt={person.name}
+                                              sx={{
+                                                width: 20,
+                                                height: 20,
+                                                borderRadius: "50%",
+                                                mr: 1,
+                                              }}
+                                            />
+                                          )}
+                                          {person.name}
+                                        </Box>
+                                      </MenuItem>
+                                    ))}
+                                  </Select>
+                                </FormControl>
+
+                                <FormControl size="small" sx={{ minWidth: 80 }}>
+                                  <InputLabel>نقش</InputLabel>
+                                  <Select
+                                    value={attendeeRole}
+                                    onChange={(e) =>
+                                      setAttendeeRole(
+                                        e.target.value as EventAttendee["role"]
+                                      )
+                                    }
+                                    label="نقش"
+                                  >
+                                    <MenuItem value="organizer">
+                                      برگزارکننده
+                                    </MenuItem>
+                                    <MenuItem value="required">اجباری</MenuItem>
+                                    <MenuItem value="optional">
+                                      اختیاری
+                                    </MenuItem>
+                                    <MenuItem value="informational">
+                                      اطلاعی
+                                    </MenuItem>
+                                  </Select>
+                                </FormControl>
+
+                                <Button
+                                  variant="contained"
+                                  size="small"
+                                  onClick={addAttendee}
+                                  startIcon={<PersonAddIcon />}
+                                  disabled={!selectedPerson}
+                                  sx={{
+                                    borderRadius: 2,
+                                    textTransform: "none",
+                                    fontWeight: 500,
+                                  }}
+                                >
+                                  افزودن
+                                </Button>
+                              </Box>
+                            </Box>
+                          )}
+                        </Stack>
+                      </Collapse>
+                    </Box>
+
+                    <Divider />
+
+                    {/* Comments */}
+                    <Box>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          mb: 2,
+                          cursor: "pointer",
+                        }}
+                        onClick={() => toggleSection("comments")}
+                      >
+                        <Typography
+                          variant="subtitle1"
+                          sx={{
+                            fontWeight: 600,
+                            color: "text.primary",
+                            fontSize: "1rem",
+                            display: "flex",
+                            alignItems: "center",
+                          }}
+                        >
+                          نظرات
+                          <Chip
+                            label={comments.items.length}
+                            size="small"
+                            sx={{ ml: 1 }}
+                          />
+                        </Typography>
+                        {expandedSections.comments ? (
+                          <ExpandLessIcon />
+                        ) : (
+                          <ExpandMoreIcon />
+                        )}
+                      </Box>
+
+                      <Collapse in={expandedSections.comments}>
+                        <CommentsSection
+                          comments={comments.items}
+                          onAddComment={addComment}
+                          onUpdateComment={updateComment}
+                          onDeleteComment={deleteComment}
+                          currentUserId="current-user"
+                          maxHeight={200}
+                        />
+                      </Collapse>
+                    </Box>
+                  </Stack>
+                </TabPanel>
 
                 {/* Action Buttons */}
                 <Box
                   sx={{
                     display: "flex",
                     justifyContent: "space-between",
-                    mt: 3,
+                    mt: 4,
+                    pt: 3,
+                    borderTop: "1px solid",
+                    borderColor: "divider",
                   }}
                 >
                   {mode === "edit" && onDelete && (
@@ -765,12 +1156,26 @@ const EventPopover: React.FC<EventPopoverProps> = ({
                       color="error"
                       startIcon={<DeleteIcon />}
                       onClick={handleDelete}
+                      sx={{
+                        borderRadius: 2,
+                        textTransform: "none",
+                        fontWeight: 500,
+                      }}
                     >
                       حذف
                     </Button>
                   )}
-                  <Box sx={{ display: "flex", gap: 1, ml: "auto" }}>
-                    <Button variant="outlined" onClick={onClose}>
+                  <Box sx={{ display: "flex", gap: 1.5, ml: "auto" }}>
+                    <Button
+                      variant="outlined"
+                      onClick={onClose}
+                      sx={{
+                        borderRadius: 2,
+                        textTransform: "none",
+                        fontWeight: 500,
+                        minWidth: 80,
+                      }}
+                    >
                       انصراف
                     </Button>
                     <Button
@@ -778,13 +1183,25 @@ const EventPopover: React.FC<EventPopoverProps> = ({
                       variant="contained"
                       startIcon={<SaveIcon />}
                       disabled={isSubmitting}
+                      sx={{
+                        borderRadius: 2,
+                        textTransform: "none",
+                        fontWeight: 600,
+                        minWidth: 100,
+                        background:
+                          "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                        "&:hover": {
+                          background:
+                            "linear-gradient(135deg, #5a67d8 0%, #6c5ce7 100%)",
+                        },
+                      }}
                     >
-                      {mode === "create" ? "ایجاد" : "ذخیره"}
+                      {mode === "create" ? "ایجاد رویداد" : "ذخیره تغییرات"}
                     </Button>
                   </Box>
                 </Box>
-              </Stack>
-            </form>
+              </form>
+            </Box>
           </CardContent>
         </Card>
       </Popover>

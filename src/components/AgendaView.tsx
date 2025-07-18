@@ -20,8 +20,8 @@ import { useCalendarHelpers } from "../hooks/useCalendarHelpers";
 import { formatJalaliFullDate } from "../utils/jalaliHelper";
 
 interface AgendaViewProps {
-  onEventClick?: (event: CalendarEvent) => void;
-  onEventEdit?: (event: CalendarEvent) => void;
+  onEventClick?: (event: CalendarEvent, mouseEvent?: React.MouseEvent) => void;
+  onEventEdit?: (event: CalendarEvent, mouseEvent?: React.MouseEvent) => void;
   onDateClick?: (date: Date, mouseEvent?: React.MouseEvent) => void;
 }
 
@@ -113,7 +113,7 @@ const AgendaView: React.FC<AgendaViewProps> = React.memo(
               backgroundColor: "action.hover",
             },
           }}
-          onClick={() => onEventClick?.(event)}
+          onClick={(e) => onEventClick?.(event, e)}
           onDoubleClick={() => onEventEdit?.(event)}
         >
           <ListItemText
