@@ -53,7 +53,22 @@ export const sampleEvents: Event[] = [
         invitedAt: "2025-04-01T10:00:00Z",
       },
     ],
-    comments: [],
+    comments: [
+      {
+        id: "c1",
+        authorId: "member-2",
+        authorName: "سارا جانسون",
+        content: "لطفا آجندای جلسه را از قبل آماده کنید",
+        createdAt: "2025-07-13T09:00:00Z",
+      },
+      {
+        id: "c2",
+        authorId: "member-1",
+        authorName: "جان اسمیت",
+        content: "البته، من گزارش فروش هفتگی رو آماده می‌کنم",
+        createdAt: "2025-07-13T09:30:00Z",
+      },
+    ],
     createdAt: "2025-04-01T10:00:00Z",
     createdBy: "user1",
     // Legacy support
@@ -72,7 +87,15 @@ export const sampleEvents: Event[] = [
       { id: "r3", type: "notification", timeBeforeEvent: 60, isEnabled: true },
     ],
     attendees: [],
-    comments: [],
+    comments: [
+      {
+        id: "c3",
+        authorId: "member-3",
+        authorName: "احمد رضائی",
+        content: "آیا نیاز به تشک یوگا خودمان هست؟",
+        createdAt: "2025-07-14T16:30:00Z",
+      },
+    ],
     createdAt: "2025-04-01T10:00:00Z",
     createdBy: "user1",
     // Legacy support

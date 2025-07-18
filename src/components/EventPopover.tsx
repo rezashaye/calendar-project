@@ -85,11 +85,13 @@ import {
   Reminder,
   EventAttendee,
   Person,
+  Comment,
 } from "../stores/calendarStore";
 import {
   generateEventId,
   generateReminderId,
   generateAttendeeId,
+  generateCommentId,
 } from "../utils/idGenerator";
 import { companyMembers } from "../mocks/companyMembers";
 import { useEventForm, useEventFieldArray } from "../hooks/useFormValidation";
@@ -102,6 +104,7 @@ import {
   ReminderList,
   AttendeeList,
 } from "./FormComponents";
+import CommentsSection from "./CommentsSection";
 import type { EventFormData } from "../types/forms";
 
 interface EventPopoverProps {
@@ -237,6 +240,14 @@ const EventPopover: React.FC<EventPopoverProps> = ({
     invitedAt: new Date().toISOString(),
   }));
 
+  const comments = useEventFieldArray(form, "comments", () => ({
+    id: generateCommentId(),
+    authorId: "current-user",
+    authorName: "کاربر فعلی",
+    content: "",
+    createdAt: new Date().toISOString(),
+  }));
+
   // Reset form when event changes
   useEffect(() => {
     if (event) {
@@ -343,6 +354,33 @@ const EventPopover: React.FC<EventPopoverProps> = ({
     }
   };
 
+  // Comment management functions
+  const addComment = (commentData: Omit<Comment, "id">) => {
+    comments.append({
+      ...commentData,
+      id: generateCommentId(),
+    });
+  };
+
+  const updateComment = (commentId: string, content: string) => {
+    const commentIndex = comments.items.findIndex((c) => c.id === commentId);
+    if (commentIndex !== -1) {
+      const updatedComment = {
+        ...comments.items[commentIndex],
+        content,
+        updatedAt: new Date().toISOString(),
+      };
+      comments.update(commentIndex, updatedComment);
+    }
+  };
+
+  const deleteComment = (commentId: string) => {
+    const commentIndex = comments.items.findIndex((c) => c.id === commentId);
+    if (commentIndex !== -1) {
+      comments.remove(commentIndex);
+    }
+  };
+
   // Get available people (not already attendees)
   const availablePeople = companyMembers.filter(
     (member) =>
@@ -394,8 +432,10 @@ const EventPopover: React.FC<EventPopoverProps> = ({
         anchorPosition={anchorPosition}
         PaperProps={{
           sx: {
-            width: isMobile ? "90vw" : 400,
-            maxWidth: 400,
+            width: isMobile ? "90vw" : 500,
+            maxWidth: 500,
+            maxHeight: isMobile ? "90vh" : 600,
+            overflowY: "auto",
             borderRadius: 2,
             boxShadow: "0 8px 32px rgba(0, 0, 0, 0.12)",
             mt: 1,
@@ -700,6 +740,16 @@ const EventPopover: React.FC<EventPopoverProps> = ({
                     </Box>
                   )}
                 </Box>
+
+                {/* Comments Section */}
+                <CommentsSection
+                  comments={comments.items}
+                  onAddComment={addComment}
+                  onUpdateComment={updateComment}
+                  onDeleteComment={deleteComment}
+                  currentUserId="current-user"
+                  maxHeight={150}
+                />
 
                 {/* Action Buttons */}
                 <Box
