@@ -17,6 +17,7 @@ import {
   Event as CalendarEvent,
 } from "../stores/calendarStore";
 import { useCalendarHelpers } from "../hooks/useCalendarHelpers";
+import { CategoryIcon } from "./CategoryIcon";
 import { formatJalaliFullDate } from "../utils/jalaliHelper";
 
 interface AgendaViewProps {
@@ -35,7 +36,7 @@ const AgendaView: React.FC<AgendaViewProps> = React.memo(
     });
 
     // Use Zustand store for calendar state
-    const { currentDate } = useCalendarStore();
+    const { currentDate, getCategoryById } = useCalendarStore();
 
     // Use custom hook for calendar helpers
     const { getEventsForDateRange, formatTime, isToday } = useCalendarHelpers();
@@ -53,8 +54,10 @@ const AgendaView: React.FC<AgendaViewProps> = React.memo(
 
       // Sort events by date and time
       return events.sort((a, b) => {
-        const dateA = new Date(a.date + "T" + a.startTime);
-        const dateB = new Date(b.date + "T" + b.startTime);
+        const eventDateA = a.startDate || a.date;
+        const eventDateB = b.startDate || b.date;
+        const dateA = new Date(eventDateA + "T" + a.startTime);
+        const dateB = new Date(eventDateB + "T" + b.startTime);
         return dateA.getTime() - dateB.getTime();
       });
     };
@@ -66,7 +69,9 @@ const AgendaView: React.FC<AgendaViewProps> = React.memo(
       const grouped: { [key: string]: CalendarEvent[] } = {};
 
       upcomingEvents.forEach((event) => {
-        const date = event.date || event.startDate;
+        const date = event.startDate || event.date;
+        if (!date) return; // Skip events without date
+
         if (!grouped[date]) {
           grouped[date] = [];
         }
@@ -121,9 +126,18 @@ const AgendaView: React.FC<AgendaViewProps> = React.memo(
               <Box
                 sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}
               >
+                <CategoryIcon
+                  category={
+                    event.categoryId
+                      ? getCategoryById(event.categoryId)
+                      : undefined
+                  }
+                  size="small"
+                  showTooltip={true}
+                />
                 <Typography
                   variant="h6"
-                  sx={{ fontWeight: 600 }}
+                  sx={{ fontWeight: 600, flex: 1 }}
                   component="span"
                 >
                   {event.title}
@@ -229,8 +243,8 @@ const AgendaView: React.FC<AgendaViewProps> = React.memo(
     const renderMiniCalendar = () => {
       const upcomingCount = upcomingEvents.length;
       const todayEvents = upcomingEvents.filter((event) => {
-        const eventDate = event.date || event.startDate;
-        return isToday(new Date(eventDate));
+        const eventDate = event.startDate || event.date;
+        return eventDate && isToday(new Date(eventDate));
       });
 
       return (
@@ -274,9 +288,30 @@ const AgendaView: React.FC<AgendaViewProps> = React.memo(
               </Typography>
               {todayEvents.map((event) => (
                 <Box key={event.id} sx={{ mb: 1.5 }}>
-                  <Typography variant="body2" sx={{ fontWeight: 500, mb: 0.5 }}>
-                    {event.title}
-                  </Typography>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 0.5,
+                      mb: 0.5,
+                    }}
+                  >
+                    <CategoryIcon
+                      category={
+                        event.categoryId
+                          ? getCategoryById(event.categoryId)
+                          : undefined
+                      }
+                      size="small"
+                      showTooltip={true}
+                    />
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: 500, flex: 1 }}
+                    >
+                      {event.title}
+                    </Typography>
+                  </Box>
                   <Typography variant="caption" color="text.secondary">
                     {formatTime(event.startTime)} - {formatTime(event.endTime)}
                   </Typography>

@@ -202,4 +202,30 @@ export const formatJalaliFullDate = (date: Date) => {
   return getJalaliFullDate(date);
 };
 
+// تابع تبدیل رقم‌های فارسی به لاتین
+export const convertPersianToLatinDigits = (str: string): string => {
+  const persianDigits = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
+  const latinDigits = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
+
+  let result = str;
+  for (let i = 0; i < persianDigits.length; i++) {
+    const persianRegex = new RegExp(persianDigits[i], "g");
+    result = result.replace(persianRegex, latinDigits[i]);
+  }
+  return result;
+};
+
+// تابع تبدیل رقم‌های لاتین به فارسی
+export const convertLatinToPersianDigits = (str: string): string => {
+  const persianDigits = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
+  const latinDigits = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
+
+  let result = str;
+  for (let i = 0; i < latinDigits.length; i++) {
+    const latinRegex = new RegExp(latinDigits[i], "g");
+    result = result.replace(latinRegex, persianDigits[i]);
+  }
+  return result;
+};
+
 export default moment;

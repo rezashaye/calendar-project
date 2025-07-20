@@ -89,7 +89,11 @@ export const useCalendarHelpers = () => {
   const getEventsForDate = useMemo(() => {
     return (date: Date) => {
       const dateStr = date.toISOString().split("T")[0];
-      return events.filter((event) => event.date === dateStr);
+      return events.filter((event) => {
+        // Use startDate as the primary date field, fallback to legacy date field
+        const eventDate = event.startDate || event.date;
+        return eventDate === dateStr;
+      });
     };
   }, [events]);
 

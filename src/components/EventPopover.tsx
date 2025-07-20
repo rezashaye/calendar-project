@@ -43,7 +43,7 @@ import {
 } from "@mui/icons-material";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
-import moment from "moment-jalaali";
+import moment, { Moment } from "moment-jalaali";
 
 // Configure moment-jalaali for Persian calendar
 moment.loadPersian({
@@ -99,6 +99,7 @@ import {
   EventAttendee,
   Person,
   Comment,
+  Category,
 } from "../stores/calendarStore";
 import {
   generateEventId,
@@ -106,6 +107,7 @@ import {
   generateAttendeeId,
   generateCommentId,
 } from "../utils/idGenerator";
+import { convertPersianToLatinDigits } from "../utils/jalaliHelper";
 import { companyMembers } from "../mocks/companyMembers";
 import { useEventForm, useEventFieldArray } from "../hooks/useFormValidation";
 import {
@@ -114,6 +116,7 @@ import {
   ControlledDatePicker,
   ControlledTimePicker,
   ControlledColorPicker,
+  ControlledCategoryPicker,
   ReminderList,
   AttendeeList,
 } from "./FormComponents";
@@ -130,6 +133,7 @@ interface EventPopoverProps {
   mode: "create" | "edit";
   defaultDate?: Date;
   anchorPosition?: { top: number; left: number };
+  categories?: Category[];
 }
 
 interface TabPanelProps {
@@ -187,6 +191,7 @@ const EventPopover: React.FC<EventPopoverProps> = ({
   mode,
   defaultDate,
   anchorPosition,
+  categories = [],
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -242,7 +247,7 @@ const EventPopover: React.FC<EventPopoverProps> = ({
         ...event,
         // Ensure isAllDay is always a boolean
         isAllDay: event.isAllDay ?? false,
-        // Convert dates to moment objects
+        // Convert string dates to moment objects for form usage
         startDate: event.startDate ? moment(event.startDate) : moment(),
         endDate: event.endDate ? moment(event.endDate) : moment(),
         startTime: event.startTime
@@ -455,21 +460,96 @@ const EventPopover: React.FC<EventPopoverProps> = ({
 
   // Form submission handler
   const onSubmit = (data: EventFormData) => {
+    console.log("Form onSubmit called with data:", data);
+
+    // More robust time conversion function
+    const convertToTimeString = (
+      timeValue: string | Moment | null | undefined
+    ): string => {
+      if (!timeValue) return "09:00";
+      if (moment.isMoment(timeValue)) {
+        // Format and convert Persian digits to Latin
+        const formatted = timeValue.format("HH:mm");
+        const latinTime = convertPersianToLatinDigits(formatted);
+        return latinTime;
+      }
+      if (typeof timeValue === "string") {
+        // Convert Persian digits to Latin digits first
+        const latinString = convertPersianToLatinDigits(timeValue);
+
+        // Check if it's already in HH:mm format
+        if (/^\d{2}:\d{2}$/.test(latinString)) {
+          return latinString;
+        }
+        // Try to parse it as a moment and format
+        const parsed = moment(latinString, ["HH:mm", "H:mm", "HH:mm:ss"]);
+        if (parsed.isValid()) {
+          const formatted = parsed.format("HH:mm");
+          const latinTime = convertPersianToLatinDigits(formatted);
+          return latinTime;
+        }
+        console.warn(
+          "Could not parse time string:",
+          timeValue,
+          "converted to:",
+          latinString
+        );
+      }
+      return "09:00"; // fallback
+    };
+
+    // More robust date conversion function
+    const convertToDateString = (
+      dateValue: string | Moment | null | undefined
+    ): string => {
+      if (!dateValue) return moment().format("YYYY-MM-DD");
+      if (moment.isMoment(dateValue)) {
+        const formatted = dateValue.format("YYYY-MM-DD");
+        return convertPersianToLatinDigits(formatted);
+      }
+      if (typeof dateValue === "string") {
+        const latinString = convertPersianToLatinDigits(dateValue);
+        // Check if it's already in YYYY-MM-DD format
+        if (/^\d{4}-\d{2}-\d{2}$/.test(latinString)) {
+          return latinString;
+        }
+        // Try to parse it as a moment and format
+        const parsed = moment(latinString);
+        if (parsed.isValid()) {
+          const formatted = parsed.format("YYYY-MM-DD");
+          return convertPersianToLatinDigits(formatted);
+        }
+      }
+      const fallback = moment().format("YYYY-MM-DD");
+      return convertPersianToLatinDigits(fallback); // fallback
+    };
+
     const eventToSave: Event = {
       ...data,
       id: data.id || generateEventId(),
-      // Convert moment objects back to strings
-      startDate: data.startDate
-        ? moment(data.startDate).format("YYYY-MM-DD")
-        : "",
-      endDate: data.endDate ? moment(data.endDate).format("YYYY-MM-DD") : "",
-      startTime: data.startTime ? moment(data.startTime).format("HH:mm") : "",
-      endTime: data.endTime ? moment(data.endTime).format("HH:mm") : "",
+      // Use improved conversion functions
+      startDate: convertToDateString(data.startDate),
+      endDate: convertToDateString(data.endDate),
+      startTime: convertToTimeString(data.startTime),
+      endTime: convertToTimeString(data.endTime),
+      // Ensure all required fields are present with defaults
+      title: data.title || "",
+      description: data.description || "",
+      color: data.color || "#2196f3",
+      categoryId: data.categoryId,
+      isAllDay: data.isAllDay || false,
+      location: data.location || "",
+      reminders: data.reminders || [],
+      attendees: data.attendees || [],
+      comments: data.comments || [],
       updatedAt: new Date().toISOString(),
       createdAt: data.createdAt || new Date().toISOString(),
       createdBy: data.createdBy || "current-user",
+      isRecurring: data.isRecurring || false,
+      recurrencePattern: data.recurrencePattern,
     };
 
+    console.log("Event to save:", eventToSave);
     onSave(eventToSave);
     onClose();
   };
@@ -615,7 +695,11 @@ const EventPopover: React.FC<EventPopoverProps> = ({
               </Box>
 
               {/* Form */}
-              <form onSubmit={handleSubmit(onSubmit)}>
+              <form
+                onSubmit={handleSubmit(onSubmit, (errors) => {
+                  console.log("Form validation errors:", errors);
+                })}
+              >
                 <TabPanel value={tabValue} index={0}>
                   <Stack spacing={2.5}>
                     {/* Essential Information */}
@@ -764,6 +848,15 @@ const EventPopover: React.FC<EventPopoverProps> = ({
                         control={control}
                         name="color"
                         colors={eventColors}
+                      />
+                    </Box>
+
+                    {/* Category Picker */}
+                    <Box>
+                      <ControlledCategoryPicker
+                        control={control}
+                        name="categoryId"
+                        categories={categories}
                       />
                     </Box>
                   </Stack>

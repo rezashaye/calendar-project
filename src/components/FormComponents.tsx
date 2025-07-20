@@ -16,7 +16,11 @@ import { DatePicker, TimePicker } from "@mui/x-date-pickers";
 import { Controller, Control, FieldPath, FieldValues } from "react-hook-form";
 import { Delete as DeleteIcon } from "@mui/icons-material";
 import type { EventFormData } from "../types/forms";
-import type { Reminder, EventAttendee } from "../stores/calendarStore";
+import type {
+  Reminder,
+  EventAttendee,
+  Category,
+} from "../stores/calendarStore";
 import moment from "moment-jalaali";
 
 // Configure moment-jalaali for Persian calendar
@@ -92,6 +96,7 @@ export function ControlledTextField<T extends FieldValues>({
       render={({ field, fieldState }) => (
         <TextField
           {...field}
+          value={field.value ?? ""}
           {...props}
           label={label}
           error={error || !!fieldState.error}
@@ -123,7 +128,7 @@ export function ControlledSelect<T extends FieldValues>({
       render={({ field, fieldState }) => (
         <FormControl fullWidth size="small" error={error || !!fieldState.error}>
           <InputLabel>{label}</InputLabel>
-          <Select {...field} {...props} label={label}>
+          <Select {...field} value={field.value ?? ""} {...props} label={label}>
             {children}
           </Select>
           {(helperText || fieldState.error?.message) && (
@@ -150,7 +155,9 @@ export function ControlledSwitch<T extends FieldValues>({
       control={control}
       render={({ field }) => (
         <FormControlLabel
-          control={<Switch {...field} checked={field.value} {...props} />}
+          control={
+            <Switch {...field} checked={field.value ?? false} {...props} />
+          }
           label={label}
         />
       )}
@@ -308,6 +315,144 @@ export function ControlledColorPicker({
   );
 }
 
+// Category Picker Component
+interface CategoryPickerProps {
+  control: Control<EventFormData>;
+  name: FieldPath<EventFormData>;
+  categories: Category[];
+}
+
+export function ControlledCategoryPicker({
+  control,
+  name,
+  categories,
+}: CategoryPickerProps) {
+  return (
+    <Controller
+      name={name}
+      control={control}
+      render={({ field, fieldState }) => (
+        <Box>
+          <Typography variant="body2" sx={{ mb: 1.5, fontWeight: 500 }}>
+            دسته‌بندی
+          </Typography>
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+            <Box
+              sx={{
+                position: "relative",
+                minWidth: 100,
+                height: 50,
+                borderRadius: 2,
+                border: "2px dashed",
+                borderColor: !field.value ? "primary.main" : "grey.300",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                transition: "all 0.2s ease",
+                backgroundColor: !field.value
+                  ? "rgba(25, 118, 210, 0.05)"
+                  : "transparent",
+                "&:hover": {
+                  borderColor: "primary.main",
+                  backgroundColor: "rgba(25, 118, 210, 0.05)",
+                },
+              }}
+              onClick={() => field.onChange(undefined)}
+              title="بدون دسته‌بندی"
+            >
+              <Typography variant="caption" color="text.secondary">
+                بدون دسته
+              </Typography>
+            </Box>
+            {categories.map((category) => (
+              <Box
+                key={category.id}
+                sx={{
+                  position: "relative",
+                  minWidth: 100,
+                  height: 50,
+                  borderRadius: 2,
+                  cursor: "pointer",
+                  border: "2px solid transparent",
+                  transition: "all 0.2s ease",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 0.5,
+                  backgroundColor: "background.paper",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                  "&:hover": {
+                    transform: "scale(1.05)",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                    borderColor: category.color,
+                  },
+                  ...(field.value === category.id && {
+                    borderColor: category.color,
+                    backgroundColor: `${category.color}15`,
+                    transform: "scale(1.02)",
+                    boxShadow: `0 0 0 2px ${category.color}40, 0 4px 12px rgba(0,0,0,0.15)`,
+                  }),
+                }}
+                onClick={() => field.onChange(category.id)}
+                title={category.description}
+              >
+                <Box sx={{ fontSize: 18, color: category.color }}>
+                  {category.icon}
+                </Box>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    textAlign: "center",
+                    fontWeight: field.value === category.id ? 600 : 400,
+                    color:
+                      field.value === category.id
+                        ? category.color
+                        : "text.secondary",
+                  }}
+                >
+                  {category.name}
+                </Typography>
+                {field.value === category.id && (
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      top: 2,
+                      right: 2,
+                      width: 16,
+                      height: 16,
+                      backgroundColor: category.color,
+                      borderRadius: "50%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 10,
+                      fontWeight: "bold",
+                      color: "white",
+                    }}
+                  >
+                    ✓
+                  </Box>
+                )}
+              </Box>
+            ))}
+          </Box>
+          {fieldState.error && (
+            <Typography
+              variant="caption"
+              color="error"
+              sx={{ mt: 0.5, display: "block" }}
+            >
+              {fieldState.error.message}
+            </Typography>
+          )}
+        </Box>
+      )}
+    />
+  );
+}
+
 // Reminder List Component
 interface ReminderListProps {
   reminders: Reminder[];
@@ -388,7 +533,9 @@ export function ReminderList({
                 width: 8,
                 height: 8,
                 borderRadius: "50%",
-                backgroundColor: reminder.isEnabled ? "primary.main" : "grey.400",
+                backgroundColor: reminder.isEnabled
+                  ? "primary.main"
+                  : "grey.400",
                 mr: 1,
               }}
             />
@@ -407,7 +554,7 @@ export function ReminderList({
               e.stopPropagation();
               onRemove(reminder.id);
             }}
-            sx={{ 
+            sx={{
               color: "error.main",
               "&:hover": { backgroundColor: "error.lighter" },
             }}

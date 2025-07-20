@@ -14,8 +14,9 @@ export default function CalendarApp() {
   const { currentView, addEvent, updateEvent, deleteEvent } =
     useCalendarStore();
 
-  // Get events for initialization check
+  // Get events and categories for initialization check
   const events = useCalendarStore((state) => state.events);
+  const categories = useCalendarStore((state) => state.categories);
 
   // State for controlling hydration
   const [isHydrated, setIsHydrated] = useState(false);
@@ -149,19 +150,26 @@ export default function CalendarApp() {
     console.log("handleEventSave called with:", event);
     console.log("Popover mode:", eventPopover.mode);
 
-    if (eventPopover.mode === "create") {
-      console.log("Adding new event");
-      addEvent(event);
-    } else if (eventPopover.mode === "edit") {
-      console.log("Updating event");
-      updateEvent(event.id, event);
+    try {
+      if (eventPopover.mode === "create") {
+        console.log("Adding new event");
+        addEvent(event);
+        console.log("Event added successfully");
+      } else if (eventPopover.mode === "edit") {
+        console.log("Updating event");
+        updateEvent(event.id, event);
+        console.log("Event updated successfully");
+      }
+      setEventPopover({
+        open: false,
+        anchorEl: null,
+        event: null,
+        mode: "create",
+      });
+    } catch (error) {
+      console.error("Error saving event:", error);
+      // Keep the popover open so user can fix the issue
     }
-    setEventPopover({
-      open: false,
-      anchorEl: null,
-      event: null,
-      mode: "create",
-    });
   };
 
   const handleEventDelete = (eventId: string) => {
@@ -234,6 +242,7 @@ export default function CalendarApp() {
         mode={eventPopover.mode}
         defaultDate={eventPopover.defaultDate}
         anchorPosition={eventPopover.anchorPosition}
+        categories={categories}
       />
     </>
   );

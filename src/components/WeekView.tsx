@@ -5,6 +5,7 @@ import { Box, Typography, Paper, IconButton } from "@mui/material";
 import { ChevronLeft, ChevronRight } from "@mui/icons-material";
 import { useCalendarStore, Event } from "../stores/calendarStore";
 import { useCalendarHelpers } from "../hooks/useCalendarHelpers";
+import { CategoryIcon } from "./CategoryIcon";
 import {
   jalaliWeekdaysShort,
   formatJalaliMonthYear,
@@ -22,7 +23,7 @@ interface WeekViewProps {
 const WeekView: React.FC<WeekViewProps> = React.memo(
   ({ onEventClick, onEventEdit, onDateClick }) => {
     // Use Zustand store for calendar state
-    const { currentDate, navigateDate } = useCalendarStore();
+    const { currentDate, navigateDate, getCategoryById } = useCalendarStore();
 
     // Use custom hook for calendar helpers
     const {
@@ -313,19 +314,36 @@ const WeekView: React.FC<WeekViewProps> = React.memo(
                       onClick={(e) => onEventClick?.(event, e)}
                       onDoubleClick={(e) => onEventEdit?.(event, e)}
                     >
-                      <Typography
-                        variant="caption"
+                      <Box
                         sx={{
-                          fontWeight: 600,
-                          display: "block",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 0.5,
                           mb: 0.5,
                         }}
                       >
-                        {event.title}
-                      </Typography>
+                        <CategoryIcon
+                          category={
+                            event.categoryId
+                              ? getCategoryById(event.categoryId)
+                              : undefined
+                          }
+                          size="small"
+                          showTooltip={false}
+                        />
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            fontWeight: 600,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                            flex: 1,
+                          }}
+                        >
+                          {event.title}
+                        </Typography>
+                      </Box>
                       <Typography
                         variant="caption"
                         sx={{

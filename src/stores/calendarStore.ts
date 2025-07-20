@@ -123,6 +123,7 @@ export const EventSchema = yup.object({
     .matches(/^\d{2}:\d{2}$/, "فرمت زمان پایان صحیح نیست")
     .required("زمان پایان الزامی است"),
   color: yup.string().required("رنگ الزامی است"),
+  categoryId: yup.string().optional(),
   isAllDay: yup.boolean().optional(),
   location: yup.string().optional(),
   reminders: yup.array(ReminderSchema).default([]),
@@ -146,23 +147,12 @@ export const EventFormSchema = yup.object({
     .min(1, "عنوان رویداد الزامی است")
     .required("عنوان رویداد الزامی است"),
   description: yup.string().optional(),
-  startDate: yup
-    .string()
-    .matches(/^\d{4}-\d{2}-\d{2}$/, "فرمت تاریخ شروع صحیح نیست")
-    .required("تاریخ شروع الزامی است"),
-  endDate: yup
-    .string()
-    .matches(/^\d{4}-\d{2}-\d{2}$/, "فرمت تاریخ پایان صحیح نیست")
-    .required("تاریخ پایان الزامی است"),
-  startTime: yup
-    .string()
-    .matches(/^\d{2}:\d{2}$/, "فرمت زمان شروع صحیح نیست")
-    .required("زمان شروع الزامی است"),
-  endTime: yup
-    .string()
-    .matches(/^\d{2}:\d{2}$/, "فرمت زمان پایان صحیح نیست")
-    .required("زمان پایان الزامی است"),
+  startDate: yup.mixed().required("تاریخ شروع الزامی است"),
+  endDate: yup.mixed().required("تاریخ پایان الزامی است"),
+  startTime: yup.mixed().required("زمان شروع الزامی است"),
+  endTime: yup.mixed().required("زمان پایان الزامی است"),
   color: yup.string().required("رنگ الزامی است"),
+  categoryId: yup.string().optional(),
   isAllDay: yup.boolean().optional(),
   location: yup.string().optional(),
   reminders: yup.array(ReminderSchema).default([]),
@@ -175,7 +165,20 @@ export const EventFormSchema = yup.object({
   recurrencePattern: yup.string().optional(),
 });
 
+// Category schema and type
+export const CategorySchema = yup.object({
+  id: yup.string().required("شناسه الزامی است"),
+  name: yup
+    .string()
+    .min(1, "نام دسته‌بندی الزامی است")
+    .required("نام دسته‌بندی الزامی است"),
+  icon: yup.string().required("آیکون الزامی است"),
+  color: yup.string().required("رنگ الزامی است"),
+  description: yup.string().optional(),
+});
+
 // TypeScript types from Yup schemas
+export type Category = InferType<typeof CategorySchema>;
 export type Person = InferType<typeof PersonSchema>;
 export type EventAttendee = InferType<typeof AttendeeSchema>;
 export type Reminder = InferType<typeof ReminderSchema>;
@@ -201,6 +204,9 @@ interface CalendarState {
 
   // Events state
   events: Event[];
+
+  // Categories state
+  categories: Category[];
 
   // UI state
   isLoading: boolean;
@@ -245,6 +251,12 @@ interface CalendarState {
   ) => void;
   removeAttendee: (eventId: string, attendeeId: string) => void;
 
+  // Category management
+  addCategory: (category: Category) => void;
+  updateCategory: (id: string, category: Partial<Category>) => void;
+  deleteCategory: (id: string) => void;
+  getCategoryById: (id: string) => Category | undefined;
+
   // Utility functions
   formatDate: (date: Date) => string;
   formatTime: (time: string) => string;
@@ -252,6 +264,66 @@ interface CalendarState {
   // Initialize with sample data
   initializeSampleData: () => void;
 }
+
+// Default categories with Persian names and icons
+const defaultCategories: Category[] = [
+  {
+    id: "financial",
+    name: "مالی",
+    icon: "💰",
+    color: "#4CAF50",
+    description: "موضوعات مالی و بودجه",
+  },
+  {
+    id: "development",
+    name: "برنامه‌نویسی",
+    icon: "💻",
+    color: "#2196F3",
+    description: "پروژه‌های توسعه نرم‌افزار",
+  },
+  {
+    id: "hr",
+    name: "منابع انسانی",
+    icon: "👥",
+    color: "#F44336",
+    description: "امور منابع انسانی و کارکنان",
+  },
+  {
+    id: "marketing",
+    name: "بازاریابی",
+    icon: "📈",
+    color: "#FF9800",
+    description: "فعالیت‌های بازاریابی و تبلیغات",
+  },
+  {
+    id: "meeting",
+    name: "جلسات",
+    icon: "🤝",
+    color: "#9C27B0",
+    description: "جلسات کاری و ملاقات‌ها",
+  },
+  {
+    id: "project",
+    name: "پروژه",
+    icon: "📋",
+    color: "#607D8B",
+    description: "مدیریت پروژه‌ها",
+  },
+  {
+    id: "training",
+    name: "آموزش",
+    icon: "🎓",
+    color: "#795548",
+    description: "دوره‌ها و کارگاه‌های آموزشی",
+  },
+  {
+    id: "event",
+    name: "رویداد",
+    icon: "🎉",
+    color: "#E91E63",
+    description: "رویدادها و مراسمات",
+  },
+];
 
 export const useCalendarStore = create<CalendarState>()(
   devtools(
@@ -262,6 +334,7 @@ export const useCalendarStore = create<CalendarState>()(
         currentDate: new Date("2025-07-13"), // Fixed date for SSR consistency
         selectedDate: new Date("2025-07-13"), // Fixed date for SSR consistency
         events: [],
+        categories: defaultCategories,
         isLoading: false,
         error: null,
 
@@ -320,6 +393,8 @@ export const useCalendarStore = create<CalendarState>()(
             console.error("Event validation failed:", error);
             // In a real app, you might want to set an error state or throw
             set({ error: "Failed to add event: Invalid event data" });
+            // Re-throw the error so it bubbles up to the form
+            throw error;
           }
         },
 
@@ -356,7 +431,11 @@ export const useCalendarStore = create<CalendarState>()(
         getEventsForDate: (date) => {
           const { events } = get();
           const dateStr = date.toISOString().split("T")[0];
-          return events.filter((event) => event.date === dateStr);
+          return events.filter((event) => {
+            // Use startDate as the primary date field, fallback to legacy date field
+            const eventDate = event.startDate || event.date;
+            return eventDate === dateStr;
+          });
         },
 
         getEventsForDateRange: (startDate, endDate) => {
@@ -364,8 +443,9 @@ export const useCalendarStore = create<CalendarState>()(
           const startStr = startDate.toISOString().split("T")[0];
           const endStr = endDate.toISOString().split("T")[0];
           return events.filter((event) => {
-            const eventDate = event.date || event.startDate;
-            return eventDate >= startStr && eventDate <= endStr;
+            // Use startDate as the primary date field, fallback to legacy date field
+            const eventDate = event.startDate || event.date;
+            return eventDate && eventDate >= startStr && eventDate <= endStr;
           });
         },
 
@@ -535,6 +615,53 @@ export const useCalendarStore = create<CalendarState>()(
         },
 
         // Utility functions
+        // Category management
+        addCategory: (category) => {
+          try {
+            const validatedCategory = CategorySchema.validateSync(category);
+            set((state) => ({
+              categories: [...state.categories, validatedCategory],
+            }));
+          } catch (error) {
+            console.error("Error adding category:", error);
+            set({ error: "خطا در افزودن دسته‌بندی" });
+          }
+        },
+
+        updateCategory: (id, categoryUpdates) => {
+          try {
+            set((state) => ({
+              categories: state.categories.map((cat) => {
+                if (cat.id === id) {
+                  const updatedCategory = { ...cat, ...categoryUpdates };
+                  return CategorySchema.validateSync(updatedCategory);
+                }
+                return cat;
+              }),
+            }));
+          } catch (error) {
+            console.error("Error updating category:", error);
+            set({ error: "خطا در بروزرسانی دسته‌بندی" });
+          }
+        },
+
+        deleteCategory: (id) => {
+          set((state) => ({
+            categories: state.categories.filter((cat) => cat.id !== id),
+            // Also remove category from events
+            events: state.events.map((event) => ({
+              ...event,
+              categoryId:
+                event.categoryId === id ? undefined : event.categoryId,
+            })),
+          }));
+        },
+
+        getCategoryById: (id) => {
+          const state = get();
+          return state.categories.find((cat) => cat.id === id);
+        },
+
         formatDate: (date) => {
           return date.toLocaleDateString("en-US", {
             weekday: "long",
@@ -564,6 +691,7 @@ export const useCalendarStore = create<CalendarState>()(
           currentDate: state.currentDate,
           selectedDate: state.selectedDate,
           events: state.events,
+          categories: state.categories,
         }),
         skipHydration: true, // Prevent hydration mismatches
         storage: {

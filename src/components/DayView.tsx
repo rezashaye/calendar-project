@@ -11,6 +11,7 @@ import {
 } from "@mui/icons-material";
 import { useCalendarStore, Event } from "../stores/calendarStore";
 import { useCalendarHelpers } from "../hooks/useCalendarHelpers";
+import { CategoryIcon } from "./CategoryIcon";
 import {
   jalaliWeekdaysShort,
   formatJalaliMonthYear,
@@ -35,7 +36,7 @@ const DayView: React.FC<DayViewProps> = React.memo(
     });
 
     // Use Zustand store for calendar state
-    const { currentDate, navigateDate } = useCalendarStore();
+    const { currentDate, navigateDate, getCategoryById } = useCalendarStore();
 
     // Use custom hook for calendar helpers
     const { timeSlots, getEventsForDate, formatTime } = useCalendarHelpers();
@@ -177,9 +178,27 @@ const DayView: React.FC<DayViewProps> = React.memo(
                 }}
                 onClick={(e) => onEventClick?.(event, e)}
               >
-                <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
-                  {event.title}
-                </Typography>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.5,
+                    mb: 0.5,
+                  }}
+                >
+                  <CategoryIcon
+                    category={
+                      event.categoryId
+                        ? getCategoryById(event.categoryId)
+                        : undefined
+                    }
+                    size="small"
+                    showTooltip={true}
+                  />
+                  <Typography variant="body2" sx={{ fontWeight: 600, flex: 1 }}>
+                    {event.title}
+                  </Typography>
+                </Box>
                 <Box
                   sx={{
                     display: "flex",
@@ -337,18 +356,36 @@ const DayView: React.FC<DayViewProps> = React.memo(
                   }}
                   onClick={(e) => onEventClick?.(event, e)}
                 >
-                  <Typography
-                    variant="body2"
+                  <Box
                     sx={{
-                      fontWeight: 600,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 0.5,
                       mb: 0.5,
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
                     }}
                   >
-                    {event.title}
-                  </Typography>
+                    <CategoryIcon
+                      category={
+                        event.categoryId
+                          ? getCategoryById(event.categoryId)
+                          : undefined
+                      }
+                      size="small"
+                      showTooltip={false}
+                    />
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        fontWeight: 600,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                        flex: 1,
+                      }}
+                    >
+                      {event.title}
+                    </Typography>
+                  </Box>
                   <Typography
                     variant="caption"
                     sx={{

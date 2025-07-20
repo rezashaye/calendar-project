@@ -11,6 +11,7 @@ export interface EventFormData {
   startTime: string | Moment;
   endTime: string | Moment;
   color: string;
+  categoryId?: string;
   isAllDay?: boolean;
   location?: string;
   reminders: Reminder[];

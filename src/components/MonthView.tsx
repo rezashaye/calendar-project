@@ -5,6 +5,7 @@ import { Box, Typography, Paper, IconButton, Badge } from "@mui/material";
 import { ChevronLeft, ChevronRight } from "@mui/icons-material";
 import { useCalendarStore, Event } from "../stores/calendarStore";
 import { useCalendarHelpers } from "../hooks/useCalendarHelpers";
+import { CategoryIcon } from "./CategoryIcon";
 import {
   jalaliWeekdaysShort,
   formatJalaliMonthYear,
@@ -28,7 +29,8 @@ const MonthView: React.FC<MonthViewProps> = React.memo(
     });
 
     // Use Zustand store for calendar state
-    const { currentDate, navigateDate, setSelectedDate } = useCalendarStore();
+    const { currentDate, navigateDate, setSelectedDate, getCategoryById } =
+      useCalendarStore();
 
     // Use custom hook for calendar helpers
     const { getEventsForDate, formatTime, isToday, getEventCountForDate } =
@@ -80,13 +82,35 @@ const MonthView: React.FC<MonthViewProps> = React.memo(
                 textOverflow: "ellipsis",
                 whiteSpace: "nowrap",
                 cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: 0.5,
                 "&:hover": {
                   opacity: 0.8,
                 },
               }}
               onClick={(e) => onEventClick?.(event, e)}
             >
-              {event.title}
+              <CategoryIcon
+                category={
+                  event.categoryId
+                    ? getCategoryById(event.categoryId)
+                    : undefined
+                }
+                size="small"
+                showTooltip={false}
+              />
+              <Typography
+                variant="caption"
+                sx={{
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  flex: 1,
+                }}
+              >
+                {event.title}
+              </Typography>
             </Box>
           ))}
           {dayEvents.length > maxVisible && (
@@ -144,12 +168,30 @@ const MonthView: React.FC<MonthViewProps> = React.memo(
                 .slice(0, 3)
                 .map((event) => (
                   <Box key={event.id} sx={{ mb: 1 }}>
-                    <Typography
-                      variant="body2"
-                      sx={{ fontWeight: 500, mb: 0.5 }}
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 0.5,
+                        mb: 0.5,
+                      }}
                     >
-                      {event.title}
-                    </Typography>
+                      <CategoryIcon
+                        category={
+                          event.categoryId
+                            ? getCategoryById(event.categoryId)
+                            : undefined
+                        }
+                        size="small"
+                        showTooltip={true}
+                      />
+                      <Typography
+                        variant="body2"
+                        sx={{ fontWeight: 500, flex: 1 }}
+                      >
+                        {event.title}
+                      </Typography>
+                    </Box>
                     <Typography variant="caption" color="text.secondary">
                       {formatTime(event.startTime)} -{" "}
                       {formatTime(event.endTime)}
